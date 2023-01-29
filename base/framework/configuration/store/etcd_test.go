@@ -27,7 +27,7 @@ func TestEtcdStoreGetObj(t *testing.T) {
 		Key    string `json:"key"`
 		Status string `json:"status"`
 	}{}
-	err = sto.GetObj("/microserice/configuration/test/obj", &obj)
+	err = sto.GetJson("/microserice/configuration/test/obj", &obj)
 	if err != nil {
 		t.Fatal(err)
 	}

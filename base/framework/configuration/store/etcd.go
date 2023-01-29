@@ -59,7 +59,7 @@ func (store *EtcdStore) Get(path string) (string, error) {
 	return string(resp.Kvs[0].Value), nil
 }
 
-func (store *EtcdStore) GetObj(path string, obj interface{}) error {
+func (store *EtcdStore) GetJson(path string, obj interface{}) error {
 	resp, err := store.cli.Get(context.Background(), path)
 	if err != nil {
 		return err

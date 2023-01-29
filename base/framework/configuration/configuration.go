@@ -9,7 +9,7 @@ import (
 
 type Configuration interface {
 	Get(path string) (string, error)
-	GetObj(path string, obj interface{}) error
+	GetJson(path string, obj interface{}) error
 }
 
 func Default() (Configuration, error) {
