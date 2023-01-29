@@ -72,7 +72,7 @@ func App(conf configuration.Configuration, systemID int, cb setupCallback) {
 
 func getWebConfig(conf configuration.Configuration, systemID int) config {
 	c := config{}
-	conf.Unmarshal("/base/framwork/web/"+strconv.Itoa(systemID), c)
+	conf.GetObj("/base/framwork/web/"+strconv.Itoa(systemID), &c)
 	if c.Addr == "" {
 		c.Addr = ":8080"
 	}
