@@ -4,7 +4,7 @@ import (
 	"log"
 )
 
-// TODO
+// TODO: framework log
 type Log struct {
 }
 
@@ -22,6 +22,9 @@ func (il *Log) Info(v ...any) {
 
 func (il *Log) Debug(v ...any) {
 	log.Println(v...)
+}
+func (il *Log) Debugf(format string, v ...any) {
+	log.Printf(format, v...)
 }
 
 func (il *Log) Error(v ...any) {

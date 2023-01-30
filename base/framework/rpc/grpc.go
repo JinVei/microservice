@@ -80,7 +80,7 @@ func Serve(conf configuration.Configuration, systemID int, cb setupCallback) err
 	signal.Notify(quit, os.Interrupt)
 	<-quit
 
-	fmt.Println("Exit rpc srv")
+	slog.Info("Exit rpc srv")
 	srv.GracefulStop()
 
 	return nil

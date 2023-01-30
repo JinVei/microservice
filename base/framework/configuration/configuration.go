@@ -19,3 +19,15 @@ func Default() (Configuration, error) {
 	}
 	return store.NewEtcdStore(token)
 }
+
+func DefaultOrDie() Configuration {
+	token := os.Getenv("MICROSERVICE_CONFIGURATION_TOKEN")
+	if token == "" {
+		panic(errors.New("env `MICROSERVICE_CONFIGURATION_TOKEN` is empty"))
+	}
+	conf, err := store.NewEtcdStore(token)
+	if err != nil {
+		panic(err)
+	}
+	return conf
+}

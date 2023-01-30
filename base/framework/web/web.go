@@ -2,19 +2,21 @@ package web
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
 
 	"github.com/jinvei/microservice/base/framework/configuration"
+	"github.com/jinvei/microservice/base/framework/log"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
 )
+
+var slog = log.New()
 
 type setupCallback func(e *echo.Echo)
 
@@ -27,13 +29,24 @@ type config struct {
 	SvcName     string `json:"svcName"`
 }
 
-func App(conf configuration.Configuration, systemID int, cb setupCallback) {
+func App(conf configuration.Configuration, systemID int, cb setupCallback) error {
+	if conf == nil {
+		c, err := configuration.Default()
+		if err != nil {
+			return err
+		}
+		conf = c
+	}
+
 	srv := echo.New()
 	srv.HideBanner = true
 	srv.Validator = formValidator
 	//srv.Renderer = &Template{}
 	c := getWebConfig(conf, systemID)
 	svcName := c.SvcName
+	if svcName == "" {
+		svcName = strconv.Itoa(systemID)
+	}
 
 	srv.Use(middleware.Recover(), otelecho.Middleware(svcName), middleware.Logger())
 
@@ -51,28 +64,32 @@ func App(conf configuration.Configuration, systemID int, cb setupCallback) {
 		srv.Use(middleware.Gzip())
 	}
 
-	go startMetricSrv(c.MetricsAddr)
+	if c.MetricsAddr != "" {
+		go startMetricSrv(c.MetricsAddr)
+	}
 
 	go func() {
 		if err := srv.Start(c.Addr); err != nil {
-			fmt.Printf("Echo srv err: %v", err)
+			slog.Errorf("Echo srv err: %v", err)
 		}
 	}()
 
+	// waiting Siganl to exit server
 	quit := make(chan os.Signal)
 	signal.Notify(quit, os.Interrupt)
 	<-quit
 
-	fmt.Println("Exit Echo srv")
+	slog.Info("Exit Echo server")
 	if err := srv.Shutdown(context.Background()); err != nil {
-		fmt.Println("Exit Echo srv err: ", err)
+		slog.Error("Exit Echo server err: ", err)
 	}
 
+	return nil
 }
 
 func getWebConfig(conf configuration.Configuration, systemID int) config {
 	c := config{}
-	conf.GetJson("/base/framwork/web/"+strconv.Itoa(systemID), &c)
+	conf.GetJson("/microservice/framwork/web/"+strconv.Itoa(systemID), &c)
 	if c.Addr == "" {
 		c.Addr = ":8080"
 	}
@@ -90,8 +107,8 @@ func startMetricSrv(addr string) {
 	if addr == "" {
 		addr = ":7070"
 	}
-	fmt.Printf("starting metric srv: %s\n" + addr)
+	slog.Infof("starting metric srv: %s\n" + addr)
 	if err := http.ListenAndServe(addr, nil); err != nil {
-		fmt.Printf("metric srv err: %+v\n", err)
+		slog.Infof("metric srv err: %+v\n", err)
 	}
 }
