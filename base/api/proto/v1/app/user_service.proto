@@ -1,0 +1,98 @@
+syntax = "proto3";
+
+package jv.microservice.v1.app;
+
+option go_package = "github.com/jinvei/microservice/base/api/proto/v1/app";
+
+import "proto/v1/dto/common.proto";
+import "proto/v1/dto/user.proto";
+
+message GetUserReq {
+    int64 UserID = 1;
+}
+
+message GetUserResp {
+    dto.Status Status =1;
+    dto.User User =2;
+}
+
+message CreateUserReq {
+    dto.User User = 1;
+}
+
+message CreateUserResp {
+    dto.Status Status =1;
+}
+
+message UpdateUserReq {
+    int64 UserID = 1;
+    dto.User User = 2;
+}
+
+message UpdateUserResp {
+    dto.Status Status =1;
+    dto.User User =2;
+}
+
+message DisableUserReq {
+    int64 UserID = 1;
+}
+
+message DisableUserResp {
+    dto.Status Status =1;
+}
+
+message SignInByEmailReq {
+    string email = 1;
+    string password = 2;
+}
+
+message SignInByEmailResp {
+    dto.Status Status =1;
+    bytes session = 2;
+}
+
+message SignOutReq {
+    string email = 1;
+    string password = 2;
+}
+
+message SignOutResp {
+    dto.Status Status =1;
+    bytes session = 2;
+}
+
+message SignUpByEmailReq {
+    string email = 1;
+    string username = 2;
+    string password = 3;
+    int64 VerifyCode = 4;
+}
+
+message SignUpByEmailResp {
+    dto.Status Status =1;
+    bytes session = 2;
+}
+
+message SendEmailVerifyCodeReq {
+    string email = 1;
+}
+
+message SendEmailVerifyCodeResp {
+    dto.Status Status =1[required = true];
+}
+
+
+service UserService {
+    rpc GetUser(GetUserReq) returns (GetUserResp){}
+    rpc CreateUser(CreateUserReq) returns (CreateUserResp){}
+    rpc UpdateUser(UpdateUserReq) returns (UpdateUserResp){}
+    rpc DisableUser(DisableUserReq) returns (DisableUserResp){}
+}
+
+service AuthService {
+        rpc SignInByEmail(SignInByEmailReq) returns (SignInByEmailResp){}
+        rpc SignOut(SignOutReq) returns (SignOutResp){}
+        rpc SignUpByEmail(SignUpByEmailReq) returns (SignUpByEmailResp) {}
+        rpc SendEmailVerifyCode(SendEmailVerifyCodeReq) returns (SendEmailVerifyCodeResp) {}
+}

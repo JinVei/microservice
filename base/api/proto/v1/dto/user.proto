@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package jv.microservice.v1.dto;
+
+option go_package = "github.com/jinvei/microservice/base/api/proto/v1/dto";
+
+message User {
+    int64 ID = 1;
+    string Username = 2;
+    string Password = 3;
+    string Telnumber = 4;
+    string Email = 5;
+    string Salt = 6;
+    int32 Gender = 7;
+    int32 Status = 8;
+    int64 CreatedAt = 9;
+    int64 CreateBy = 10;
+    int64 CreateTime = 11;
+    int64 UpdatedAt = 12;
+    int64 LastModifyBy = 13;
+    int64 LastModifyTime = 14;
+}

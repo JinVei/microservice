@@ -35,6 +35,14 @@ func (il *Log) Errorf(format string, v ...any) {
 	log.Printf(format, v...)
 }
 
+func (il *Log) Warn(v ...any) {
+	log.Println(v...)
+}
+
+func (il *Log) Warnf(format string, v ...any) {
+	log.Printf(format, v...)
+}
+
 // func (l *ilog) With(fields ...string) Log {
 // 	return l
 // }

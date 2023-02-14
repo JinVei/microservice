@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package jv.microservice.v1.dto;
+
+option go_package = "github.com/jinvei/microservice/base/api/proto/v1/dto";
+
+message Status {
+    int64 code = 1;
+    string msg = 2;
+}

@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"time"
 
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinvei/microservice/base/framework/configuration"
 	confkey "github.com/jinvei/microservice/base/framework/configuration/keys"
 	"github.com/jinvei/microservice/base/framework/log"
@@ -17,17 +18,17 @@ import (
 var flog = log.New()
 
 type Config struct {
-	Dialect      string        `json:"dialect"` // 数据库类型 Mysql/SqLite/PostgreSQL
-	Dsn          string        `json:"dsn"`     // 数据库链接
-	Debug        bool          `json:"debug"`
-	EnableLog    bool          `json:"enableLog"`
-	Prefix       string        `json:"prefix"`       // 表名前缀
-	MinPoolSize  int           `json:"minPoolSize"`  // pool最大空闲数
-	MaxPoolSize  int           `json:"maxPoolSize"`  // pool最大连接数
-	IdleTimeout  time.Duration `json:"idleTimeout"`  // 连接最长存活时间
-	QueryTimeout time.Duration `json:"queryTimeout"` // 查询超时时间
-	ExecTimeout  time.Duration `json:"execTimeout"`  // 执行超时时间
-	TranTimeout  time.Duration `json:"tranTimeout"`  // 事务超时时间
+	Dialect      string `json:"dialect"` // 数据库类型 Mysql/SqLite/PostgreSQL
+	Dsn          string `json:"dsn"`     // 数据库链接
+	Debug        bool   `json:"debug"`
+	EnableLog    bool   `json:"enableLog"`
+	Prefix       string `json:"prefix"`       // 表名前缀
+	MinPoolSize  int    `json:"minPoolSize"`  // pool最大空闲数
+	MaxPoolSize  int    `json:"maxPoolSize"`  // pool最大连接数
+	IdleTimeout  string `json:"idleTimeout"`  // 连接最长存活时间
+	QueryTimeout string `json:"queryTimeout"` // 查询超时时间
+	ExecTimeout  string `json:"execTimeout"`  // 执行超时时间
+	TranTimeout  string `json:"tranTimeout"`  // 事务超时时间
 }
 
 type DataSource struct {
@@ -56,7 +57,13 @@ func (s *DataSource) Orm() *xorm.Engine {
 	xe.SetTableMapper(xname.NewPrefixMapper(xname.SnakeMapper{}, c.Prefix))
 	xe.SetMaxIdleConns(c.MinPoolSize)
 	xe.SetMaxOpenConns(c.MaxPoolSize)
-	xe.SetConnMaxLifetime(time.Duration(c.IdleTimeout))
+
+	d, err := time.ParseDuration(c.IdleTimeout)
+	if err != nil {
+		flog.Warn("parse c.IdleTimeout error. set to default '10s'")
+		d = 10 * time.Second
+	}
+	xe.SetConnMaxLifetime(d)
 
 	return nil
 }

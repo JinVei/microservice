@@ -1,0 +1,9 @@
+version: "2"
+sql:
+  - engine: "mysql"
+    queries: "users_query.sql"
+    schema: "users.sql"
+    gen:
+      go:
+        package: "users"
+        out: "./users"

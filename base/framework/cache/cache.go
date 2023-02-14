@@ -2,7 +2,6 @@ package cache
 
 import (
 	"path/filepath"
-	"strconv"
 
 	"github.com/jinvei/microservice/base/framework/configuration"
 	confkeys "github.com/jinvei/microservice/base/framework/configuration/keys"
@@ -19,11 +18,12 @@ type redisConfig struct {
 	DB       int    `json:"db"`
 }
 
-func RedisClient(conf configuration.Configuration, systemID int) *redis.Client {
+func RedisClient(conf configuration.Configuration) *redis.Client {
 	if conf == nil {
 		conf = configuration.DefaultOrDie()
 	}
-	c := getRedsiConfig(conf, systemID)
+
+	c := getRedsiConfig(conf)
 
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     c.Addr,
@@ -36,8 +36,12 @@ func RedisClient(conf configuration.Configuration, systemID int) *redis.Client {
 
 }
 
-func getRedsiConfig(conf configuration.Configuration, systemID int) redisConfig {
-	path := filepath.Join(confkeys.FwCacheRedis, strconv.Itoa(systemID))
+func getRedsiConfig(conf configuration.Configuration) redisConfig {
+	systemID := configuration.GetSystemID()
+	if systemID == "" {
+		panic("systemID is empty. should set SystemID by 'configuration.SetSystemID(id)'")
+	}
+	path := filepath.Join(confkeys.FwCacheRedis, systemID)
 	c := redisConfig{}
 	err := conf.GetJson(path, &c)
 	if err != nil {
