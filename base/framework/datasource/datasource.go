@@ -65,7 +65,7 @@ func (s *DataSource) Orm() *xorm.Engine {
 	}
 	xe.SetConnMaxLifetime(d)
 
-	return nil
+	return xe
 }
 
 func New(conf configuration.Configuration, systemID int) *DataSource {

@@ -1,4 +1,4 @@
-package service
+package auth
 
 import (
 	"context"
@@ -6,12 +6,14 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/jinvei/microservice/base/api/proto/v1/dto"
 	"github.com/redis/go-redis/v9"
 )
 
 const (
 	sessionKeyFormat        = "micro:uid:%s:sid:%s"
 	userSessionSetkeyFormat = "micro:uid:%s:sessions"
+	emVerifyCodeKeyFormat   = "micro:auth:email:%s:code"
 )
 
 type UserSession struct {
@@ -40,6 +42,8 @@ func (s *UserSession) AddSession(ctx context.Context, userID, sid string) error 
 			k := fmt.Sprintf(sessionKeyFormat, userID, dkey.Val())
 			s.rdb.Del(ctx, k)
 		}
+	} else if err != nil {
+		return err
 	}
 
 	// TODO: store entity.Session to redis
@@ -59,14 +63,34 @@ func (s *UserSession) AddSession(ctx context.Context, userID, sid string) error 
 	return nil
 }
 
-func (s *UserSession) DelUserSession(ctx context.Context, uid, sid string) error {
+func (s *UserSession) DelUserSession(ctx context.Context, uid, sid string) *dto.Status {
 	sk := fmt.Sprintf(sessionKeyFormat, uid, sid)
 	ssetK := fmt.Sprintf(userSessionSetkeyFormat, uid)
 	if res := s.rdb.Del(ctx, sk); res.Err() != nil {
 		//TODO: log
+		flog.Warn(res.Err())
 	}
 	if res := s.rdb.LRem(ctx, ssetK, 0, sid); res.Err() != nil {
 		//TODO: log
+		flog.Warn(res.Err())
 	}
 	return nil
+}
+
+func (s *UserSession) PutVerifyCode(ctx context.Context, email, code string) error {
+	key := fmt.Sprintf(emVerifyCodeKeyFormat, email)
+	res := s.rdb.Set(ctx, key, code, 60*time.Second)
+	return res.Err()
+}
+
+func (s *UserSession) GetVerifyCode(ctx context.Context, email string) (string, bool) {
+	key := fmt.Sprintf(emVerifyCodeKeyFormat, email)
+	res := s.rdb.Get(ctx, key)
+	if res.Err() != nil {
+		if res.Err() != redis.Nil {
+			flog.Error(res.Err())
+		}
+		return "", false
+	}
+	return res.Val(), true
 }

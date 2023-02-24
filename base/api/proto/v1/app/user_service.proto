@@ -49,29 +49,27 @@ message SignInByEmailReq {
 
 message SignInByEmailResp {
     dto.Status Status =1;
-    bytes session = 2;
+    bytes Token = 2;
 }
 
 message SignOutReq {
-    string email = 1;
-    string password = 2;
+    string Token = 1;
 }
 
 message SignOutResp {
     dto.Status Status =1;
-    bytes session = 2;
 }
 
 message SignUpByEmailReq {
     string email = 1;
     string username = 2;
     string password = 3;
-    int64 VerifyCode = 4;
+    string VerifyCode = 4;
 }
 
 message SignUpByEmailResp {
     dto.Status Status =1;
-    bytes session = 2;
+    bytes token = 2;
 }
 
 message SendEmailVerifyCodeReq {
@@ -79,7 +77,7 @@ message SendEmailVerifyCodeReq {
 }
 
 message SendEmailVerifyCodeResp {
-    dto.Status Status =1[required = true];
+    dto.Status Status =1;
 }
 
 

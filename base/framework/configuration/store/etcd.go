@@ -5,8 +5,10 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"path/filepath"
 	"time"
 
+	"github.com/jinvei/microservice/base/framework/configuration/keys"
 	etcdcli "go.etcd.io/etcd/client/v3"
 )
 
@@ -74,4 +76,10 @@ func (store *EtcdStore) GetJson(path string, obj interface{}) error {
 		return fmt.Errorf("path='%s' UnmarshalError:'%s', val='%s'", path, err, val)
 	}
 	return nil
+}
+
+func (store *EtcdStore) GetSvcJson(systemID, subpath string, obj interface{}) error {
+	path := filepath.Join(keys.FwService, systemID, subpath)
+
+	return store.GetJson(path, obj)
 }

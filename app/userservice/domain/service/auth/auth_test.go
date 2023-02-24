@@ -1,4 +1,4 @@
-package service
+package auth
 
 import (
 	"context"
@@ -7,8 +7,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/jinvei/microservice/app/userservice/domain/repository"
+	"github.com/jinvei/microservice/base/api/proto/v1/app"
 	"github.com/jinvei/microservice/base/framework/cache"
 	"github.com/jinvei/microservice/base/framework/configuration"
+	"github.com/jinvei/microservice/base/framework/datasource"
 )
 
 func TestSessionCache(t *testing.T) {
@@ -47,4 +50,22 @@ func TestSessionCache1(t *testing.T) {
 
 	us.AddSession(context.TODO(), "22", "s23")
 	us.AddSession(context.TODO(), "22", "s11")
+}
+
+func TestGennerateToken(t *testing.T) {
+	os.Setenv("MICROSERVICE_CONFIGURATION_TOKEN", "e30K")
+	conf := configuration.DefaultOrDie()
+	configuration.SetSystemID("10001")
+	db := datasource.New(conf, 10001)
+
+	iUserRepository := repository.NewUserRepository(db.Orm())
+
+	auth := NewAuth(conf, iUserRepository)
+	resp, _ := auth.SignInByEmail(context.Background(), &app.SignInByEmailReq{
+		Email:    "1111",
+		Password: "2222",
+	})
+	if resp.Status != nil {
+		t.Fatal(resp.Status)
+	}
 }

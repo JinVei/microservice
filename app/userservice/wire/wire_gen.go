@@ -10,7 +10,7 @@ import (
 	"github.com/jinvei/microservice/app/userservice/app/rpc"
 	"github.com/jinvei/microservice/app/userservice/domain"
 	"github.com/jinvei/microservice/app/userservice/domain/repository"
-	"github.com/jinvei/microservice/app/userservice/domain/service"
+	"github.com/jinvei/microservice/app/userservice/domain/service/auth"
 	"github.com/jinvei/microservice/base/framework/configuration"
 	"strconv"
 	"xorm.io/xorm"
@@ -24,7 +24,7 @@ func InitUserRepository(engine *xorm.Engine) domain.IUserRepository {
 }
 
 func InitAuthServer(configurationConfiguration configuration.Configuration, iUserRepository domain.IUserRepository) *rpc.AuthServer {
-	iAuthService := service.NewAuth(configurationConfiguration, iUserRepository)
+	iAuthService := auth.NewAuth(configurationConfiguration, iUserRepository)
 	authServer := rpc.NewAuthServer(iAuthService)
 	return authServer
 }

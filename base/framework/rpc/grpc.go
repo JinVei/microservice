@@ -102,7 +102,7 @@ func NewClientConn(conf configuration.Configuration, systemID int) (*grpc.Client
 	}
 
 	if sconfig.Addr == "" {
-		return nil, fmt.Errorf("addr filed is empty. path='%s'", sconfig.Addr)
+		return nil, fmt.Errorf("addr field is empty. path='%s'", sconfig.Addr)
 	}
 
 	conn, err := grpc.Dial(sconfig.Addr,

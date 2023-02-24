@@ -18,8 +18,15 @@ func NewUserRepository(xorm *xorm.Engine) domain.IUserRepository {
 	}
 }
 
-func (u *UserRepository) GetUserByEmail(ctx context.Context, email string) (entity.User, error) {
-	var user entity.User
+func (u *UserRepository) GetUserByEmail(ctx context.Context, email string) (entity.Users, error) {
+	var user entity.Users
 	_, err := u.xorm.Context(ctx).Where("email = ?", email).Get(&user)
 	return user, err
+}
+
+func (u *UserRepository) CreateUser(ctx context.Context, user *entity.Users) error {
+	if _, err := u.xorm.InsertOne(user); err != nil {
+		return err
+	}
+	return nil
 }

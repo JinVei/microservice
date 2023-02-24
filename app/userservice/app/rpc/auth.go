@@ -22,14 +22,14 @@ func (a *AuthServer) SignInByEmail(ctx context.Context, in *app.SignInByEmailReq
 	return a.svc.SignInByEmail(ctx, in)
 }
 
-// func (a *AuthService) SignOut(context.Context, *app.SignOutReq) (*app.SignOutResp, error) {
+func (a *AuthServer) SignOut(ctx context.Context, in *app.SignOutReq) (*app.SignOutResp, error) {
+	return a.svc.SignOut(ctx, in)
+}
 
-// }
+func (a *AuthServer) SignUpByEmail(ctx context.Context, in *app.SignUpByEmailReq) (*app.SignUpByEmailResp, error) {
+	return a.svc.SignUpByEmail(ctx, in)
+}
 
-// func (a *AuthService) SignUpByEmail(context.Context, *app.SignUpByEmailReq) (*app.SignUpByEmailResp, error) {
-
-// }
-
-// func (a *AuthService) SendEmailVerifyCode(context.Context, *app.SendEmailVerifyCodeReq) (*app.SendEmailVerifyCodeResp, error) {
-
-// }
+func (a *AuthServer) SendEmailVerifyCode(ctx context.Context, in *app.SendEmailVerifyCodeReq) (*app.SendEmailVerifyCodeResp, error) {
+	return a.svc.SendEmailVerifyCode(ctx, in)
+}

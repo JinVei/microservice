@@ -7,7 +7,6 @@ import (
 )
 
 type IUserRepository interface {
-	GetUserByEmail(ctx context.Context, email string) (entity.User, error)
-	// SetUserSession()
-	// GetUserSessions()
+	GetUserByEmail(ctx context.Context, email string) (entity.Users, error)
+	CreateUser(ctx context.Context, user *entity.Users) error
 }

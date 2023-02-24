@@ -10,6 +10,7 @@ import (
 type Configuration interface {
 	Get(path string) (string, error)
 	GetJson(path string, obj interface{}) error
+	GetSvcJson(systemID, subpath string, obj interface{}) error
 }
 
 func Default() (Configuration, error) {

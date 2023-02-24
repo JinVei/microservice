@@ -45,6 +45,8 @@ require (
 	github.com/prometheus/procfs v0.8.0 // indirect
 	github.com/redis/go-redis/v9 v9.0.1 // indirect
 	github.com/syndtr/goleveldb v1.0.0 // indirect
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.597 // indirect
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/ses v1.0.597 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	go.etcd.io/etcd/api/v3 v3.5.7 // indirect

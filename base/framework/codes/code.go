@@ -17,8 +17,8 @@ func Register(c map[Code]string) {
 	}
 }
 
-func (c Code) ToStatus() dto.Status {
-	return dto.Status{
+func (c Code) ToStatus() *dto.Status {
+	return &dto.Status{
 		Code: int64(c),
 		Msg:  codeMap[c],
 	}
