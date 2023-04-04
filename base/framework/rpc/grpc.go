@@ -64,7 +64,7 @@ func Serve(conf configuration.Configuration, systemID int, cb setupCallback) err
 
 	lis, err := net.Listen("tcp", sconfig.Addr)
 	if err != nil {
-		slog.Error("failed to listen: ", err)
+		slog.Error(err, "failed to listen:")
 		return err
 	}
 
@@ -72,7 +72,7 @@ func Serve(conf configuration.Configuration, systemID int, cb setupCallback) err
 
 	go func() {
 		if err := srv.Serve(lis); err != nil {
-			slog.Error("failed to serve: ", err)
+			slog.Error(err, "failed to serve: ", err)
 		}
 	}()
 
@@ -111,7 +111,7 @@ func NewClientConn(conf configuration.Configuration, systemID int) (*grpc.Client
 		grpc.WithStreamInterceptor(otelgrpc.StreamClientInterceptor()),
 	)
 	if err != nil {
-		slog.Errorf("Failed to connect: %v\n", err)
+		slog.Errorf(err, "Failed to connect\n")
 		return nil, err
 	}
 	return conn, err

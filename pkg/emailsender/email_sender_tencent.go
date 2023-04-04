@@ -56,7 +56,7 @@ func (v *TEmailSender) Send(ctx context.Context, email, parameter string) error 
 
 	resp, err := v.client.SendEmail(request)
 	if err, ok := err.(*errors.TencentCloudSDKError); ok {
-		flog.Errorf("An API error has returned: %s", err)
+		flog.Error(err, "An API error has returned")
 		return err
 	}
 	// TODO: check resp.Response.MessageId

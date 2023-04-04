@@ -45,7 +45,7 @@ func getRedsiConfig(conf configuration.Configuration) redisConfig {
 	c := redisConfig{}
 	err := conf.GetJson(path, &c)
 	if err != nil {
-		flog.Error(err)
+		flog.Error(err, "conf.GetJson", "path", path, "redisconfig", c)
 		panic(err)
 	}
 	return c

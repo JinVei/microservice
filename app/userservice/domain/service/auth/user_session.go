@@ -68,11 +68,11 @@ func (s *UserSession) DelUserSession(ctx context.Context, uid, sid string) *dto.
 	ssetK := fmt.Sprintf(userSessionSetkeyFormat, uid)
 	if res := s.rdb.Del(ctx, sk); res.Err() != nil {
 		//TODO: log
-		flog.Warn(res.Err())
+		flog.Warn("rdb.Del", "res.Err()", res.Err())
 	}
 	if res := s.rdb.LRem(ctx, ssetK, 0, sid); res.Err() != nil {
 		//TODO: log
-		flog.Warn(res.Err())
+		flog.Warn("rdb.LRem", "res.Err()", res.Err())
 	}
 	return nil
 }
@@ -88,7 +88,7 @@ func (s *UserSession) GetVerifyCode(ctx context.Context, email string) (string, 
 	res := s.rdb.Get(ctx, key)
 	if res.Err() != nil {
 		if res.Err() != redis.Nil {
-			flog.Error(res.Err())
+			flog.Error(res.Err(), "rdb.Get()")
 		}
 		return "", false
 	}

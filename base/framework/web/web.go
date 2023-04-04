@@ -69,8 +69,8 @@ func App(conf configuration.Configuration, systemID int, cb setupCallback) error
 	}
 
 	go func() {
-		if err := srv.Start(c.Addr); err != nil {
-			slog.Errorf("Echo srv err: %v", err)
+		if err := srv.Start(c.Addr); err != nil && err != http.ErrServerClosed {
+			slog.Error(err, "Echo srv err")
 		}
 	}()
 
@@ -81,7 +81,7 @@ func App(conf configuration.Configuration, systemID int, cb setupCallback) error
 
 	slog.Info("Exit Echo server")
 	if err := srv.Shutdown(context.Background()); err != nil {
-		slog.Error("Exit Echo server err: ", err)
+		slog.Error(err, "Exit Echo server err")
 	}
 
 	return nil

@@ -73,17 +73,16 @@ func (c *userServiceClient) DisableUser(ctx context.Context, in *DisableUserReq,
 }
 
 // UserServiceServer is the server API for UserService service.
-// All implementations must embed UnimplementedUserServiceServer
+// All implementations should embed UnimplementedUserServiceServer
 // for forward compatibility
 type UserServiceServer interface {
 	GetUser(context.Context, *GetUserReq) (*GetUserResp, error)
 	CreateUser(context.Context, *CreateUserReq) (*CreateUserResp, error)
 	UpdateUser(context.Context, *UpdateUserReq) (*UpdateUserResp, error)
 	DisableUser(context.Context, *DisableUserReq) (*DisableUserResp, error)
-	mustEmbedUnimplementedUserServiceServer()
 }
 
-// UnimplementedUserServiceServer must be embedded to have forward compatible implementations.
+// UnimplementedUserServiceServer should be embedded to have forward compatible implementations.
 type UnimplementedUserServiceServer struct {
 }
 
@@ -99,7 +98,6 @@ func (UnimplementedUserServiceServer) UpdateUser(context.Context, *UpdateUserReq
 func (UnimplementedUserServiceServer) DisableUser(context.Context, *DisableUserReq) (*DisableUserResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DisableUser not implemented")
 }
-func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 
 // UnsafeUserServiceServer may be embedded to opt out of forward compatibility for this service.
 // Use of this interface is not recommended, as added methods to UserServiceServer will
@@ -267,17 +265,16 @@ func (c *authServiceClient) SendEmailVerifyCode(ctx context.Context, in *SendEma
 }
 
 // AuthServiceServer is the server API for AuthService service.
-// All implementations must embed UnimplementedAuthServiceServer
+// All implementations should embed UnimplementedAuthServiceServer
 // for forward compatibility
 type AuthServiceServer interface {
 	SignInByEmail(context.Context, *SignInByEmailReq) (*SignInByEmailResp, error)
 	SignOut(context.Context, *SignOutReq) (*SignOutResp, error)
 	SignUpByEmail(context.Context, *SignUpByEmailReq) (*SignUpByEmailResp, error)
 	SendEmailVerifyCode(context.Context, *SendEmailVerifyCodeReq) (*SendEmailVerifyCodeResp, error)
-	mustEmbedUnimplementedAuthServiceServer()
 }
 
-// UnimplementedAuthServiceServer must be embedded to have forward compatible implementations.
+// UnimplementedAuthServiceServer should be embedded to have forward compatible implementations.
 type UnimplementedAuthServiceServer struct {
 }
 
@@ -293,7 +290,6 @@ func (UnimplementedAuthServiceServer) SignUpByEmail(context.Context, *SignUpByEm
 func (UnimplementedAuthServiceServer) SendEmailVerifyCode(context.Context, *SendEmailVerifyCodeReq) (*SendEmailVerifyCodeResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendEmailVerifyCode not implemented")
 }
-func (UnimplementedAuthServiceServer) mustEmbedUnimplementedAuthServiceServer() {}
 
 // UnsafeAuthServiceServer may be embedded to opt out of forward compatibility for this service.
 // Use of this interface is not recommended, as added methods to AuthServiceServer will

@@ -45,7 +45,7 @@ func (s *DataSource) Orm() *xorm.Engine {
 
 	xe, err := xorm.NewEngine(c.Dialect, c.Dsn)
 	if err != nil {
-		flog.Error(err)
+		flog.Error(err, "xorm.NewEngine()")
 		panic(fmt.Sprintf("Failed to init xorm: %+v", err))
 	}
 
@@ -83,7 +83,7 @@ func (s *DataSource) getConfig() *Config {
 	c := Config{}
 	path := filepath.Join(confkey.FwDatasource, strconv.Itoa(s.systemID))
 	if err := s.conf.GetJson(path, &c); err != nil {
-		flog.Error(err)
+		flog.Error(err, "GetJson() err:")
 		panic(err)
 	}
 	return &c

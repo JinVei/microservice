@@ -60,7 +60,7 @@ func NewAuth(conf configuration.Configuration, userRepo domain.IUserRepository) 
 	tdura := time.Hour * 24 * 7 // 7h
 	d, err := time.ParseDuration(cfg.TokenDura)
 	if err != nil {
-		flog.Warn(err)
+		flog.Warn("ParseDuration()", "err", err)
 	} else {
 		tdura = d
 	}
@@ -80,7 +80,7 @@ func (a *Auth) SignInByEmail(ctx context.Context, in *app.SignInByEmailReq) (*ap
 
 	handleError := func(c codes.Code, err error) (*app.SignInByEmailResp, error) {
 		if err != nil {
-			flog.Error(err)
+			flog.Error(err, "handleError")
 		}
 		resp := app.SignInByEmailResp{}
 		resp.Status = c.ToStatus()
@@ -94,7 +94,7 @@ func (a *Auth) SignInByEmail(ctx context.Context, in *app.SignInByEmailReq) (*ap
 
 	// verify password
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(in.Password+user.Salt)); err != nil {
-		flog.Debug(err)
+		flog.Debug("CompareHashAndPassword() err", "err", err)
 		return handleError(apicode.ErrPassword, nil)
 	}
 
@@ -123,7 +123,7 @@ func (a *Auth) SignOut(ctx context.Context, req *app.SignOutReq) (*app.SignOutRe
 		return []byte(a.cfg.JwtSecret), nil
 	})
 	if err != nil {
-		flog.Error(err)
+		flog.Error(err, "jwt.Parse()", "JwtSecret", a.cfg.JwtSecret, "req.Token", req.Token)
 		s := apicode.ErrParseJwt.ToStatus()
 		return &app.SignOutResp{Status: s}, nil
 	}
@@ -174,13 +174,13 @@ func (a *Auth) SignUpByEmail(ctx context.Context, in *app.SignUpByEmailReq) (*ap
 	salt := rand.RandStringRunes(4)
 	password, err := bcrypt.GenerateFromPassword([]byte(in.Password+salt), bcrypt.MinCost)
 	if err != nil {
-		flog.Error(err)
+		flog.Error(err, "GenerateFromPassword()")
 		return handleBadStatus(apicode.ErrInvalidPassword.ToStatus())
 	}
 
 	createby, err := strconv.Atoi(a.svcID)
 	if err != nil {
-		flog.Error(err)
+		flog.Error(err, "strconv.Atoi", "a.svcID", a.svcID)
 	}
 	timeNow := uint64(time.Now().Unix())
 	user := entity.Users{
@@ -199,7 +199,7 @@ func (a *Auth) SignUpByEmail(ctx context.Context, in *app.SignUpByEmailReq) (*ap
 
 	err = a.userRepo.CreateUser(ctx, &user)
 	if err != nil {
-		flog.Error(err)
+		flog.Error(err, "CreateUser()", "user", user)
 		return handleBadStatus(apicode.ErrCreateUser.ToStatus())
 	}
 
@@ -209,7 +209,7 @@ func (a *Auth) SignUpByEmail(ctx context.Context, in *app.SignUpByEmailReq) (*ap
 	})
 
 	if err != nil {
-		flog.Error(err)
+		flog.Error(err, "SignInByEmail", "Email", in.Email)
 		return nil, err
 	}
 
@@ -237,7 +237,7 @@ func (a *Auth) SendEmailVerifyCode(ctx context.Context, in *app.SendEmailVerifyC
 	code = rand.RandStrNumber(4)
 	param := fmt.Sprintf(VerifyCodeFormat, code)
 	if err := a.esender.Send(ctx, in.Email, param); err != nil {
-		flog.Error(err)
+		flog.Error(err, "esender.Send", "email", in.Email, "param", param)
 		return &app.SendEmailVerifyCodeResp{Status: apicode.ErrSendEmail.ToStatus()}, nil
 	}
 
@@ -275,13 +275,13 @@ func getSvcConfig(conf configuration.Configuration) (svcConfig, error) {
 		MaxSession: 3,
 	}
 	if err := conf.GetSvcJson(configuration.GetSystemID(), "", &cfg); err != nil {
-		flog.Error(err)
+		flog.Error(err, "conf.GetSvcJson()")
 		return cfg, err
 	}
 
 	evconf := emailsender.Config{}
 	if err := conf.GetSvcJson(configuration.GetSystemID(), "/emailverify", &evconf); err != nil {
-		flog.Error(err)
+		flog.Error(err, "conf.GetSvcJson", "path", "/emailverify")
 		return cfg, err
 	}
 	cfg.evconf = evconf
