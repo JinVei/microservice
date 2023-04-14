@@ -8,6 +8,7 @@ package wire
 
 import (
 	"github.com/jinvei/microservice/app/userservice/app/rpc"
+	"github.com/jinvei/microservice/app/userservice/app/web"
 	"github.com/jinvei/microservice/app/userservice/domain"
 	"github.com/jinvei/microservice/app/userservice/domain/repository"
 	"github.com/jinvei/microservice/app/userservice/domain/service/auth"
@@ -26,6 +27,12 @@ func InitAuthServer(configurationConfiguration configuration.Configuration, iUse
 	iAuthService := auth.NewAuth(configurationConfiguration, iUserRepository)
 	authServer := rpc.NewAuthServer(iAuthService)
 	return authServer
+}
+
+func InitAuthWeb(configurationConfiguration configuration.Configuration, iUserRepository domain.IUserRepository) *web.AuthController {
+	iAuthService := auth.NewAuth(configurationConfiguration, iUserRepository)
+	authService := web.NewAuthService(iAuthService)
+	return authService
 }
 
 // wire.go:

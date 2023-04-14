@@ -11,7 +11,6 @@ import (
 	"github.com/jinvei/microservice/base/framework/datasource"
 	"github.com/jinvei/microservice/base/framework/rpc"
 	"github.com/jinvei/microservice/base/framework/web"
-	"github.com/labstack/echo/v4"
 	"google.golang.org/grpc"
 )
 
@@ -22,13 +21,13 @@ func main() {
 	conf := configuration.DefaultOrDie()
 	conf.SetSystemID(strconv.Itoa(wire.SystemID))
 
+	db := datasource.New(conf, wire.SystemID)
+	userrepo := wire.InitUserRepository(db.Orm())
+
 	go func() {
 		defer waitSrv.Done()
 
-		err := rpc.Serve(nil, wire.SystemID, func(srv *grpc.Server) {
-			db := datasource.New(conf, wire.SystemID)
-
-			userrepo := wire.InitUserRepository(db.Orm())
+		err := rpc.Serve(conf, wire.SystemID, func(srv *grpc.Server) {
 			authSvc := wire.InitAuthServer(conf, userrepo)
 
 			app.RegisterAuthServiceServer(srv, authSvc)
@@ -41,12 +40,9 @@ func main() {
 
 	go func() {
 		defer waitSrv.Done()
-		web.App(nil, wire.SystemID, func(e *echo.Echo) {
-			e.GET("/demo/test", func(c echo.Context) error {
-				c.JSON(200, "Well Done!")
-				return nil
-			})
-		})
+		authctrl := wire.InitAuthWeb(conf, userrepo)
+
+		web.App(nil, wire.SystemID, authctrl.InitRoute)
 	}()
 
 	waitSrv.Wait()

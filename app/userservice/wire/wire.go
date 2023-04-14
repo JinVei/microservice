@@ -6,6 +6,7 @@ package wire
 import (
 	"github.com/google/wire"
 	"github.com/jinvei/microservice/app/userservice/app/rpc"
+	"github.com/jinvei/microservice/app/userservice/app/web"
 	"github.com/jinvei/microservice/app/userservice/domain"
 	"github.com/jinvei/microservice/app/userservice/domain/repository"
 	"github.com/jinvei/microservice/app/userservice/domain/service/auth"
@@ -24,4 +25,9 @@ func InitUserRepository(engine *xorm.Engine) domain.IUserRepository {
 func InitAuthServer(configuration.Configuration, domain.IUserRepository) *rpc.AuthServer {
 	panic(wire.Build(auth.NewAuth, rpc.NewAuthServer))
 	return &rpc.AuthServer{}
+}
+
+func InitAuthWeb(configuration.Configuration, domain.IUserRepository) *web.AuthService {
+	panic(wire.Build(auth.NewAuth, web.NewAuthService))
+	return &web.AuthService{}
 }

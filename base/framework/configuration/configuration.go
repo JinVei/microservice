@@ -34,13 +34,3 @@ func DefaultOrDie() Configuration {
 	}
 	return conf
 }
-
-// var systemID string
-
-// func SetSystemID(id string) {
-// 	systemID = id
-// }
-
-// func GetSystemID() string {
-// 	return systemID
-// }
