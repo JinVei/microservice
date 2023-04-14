@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"strconv"
 	"sync"
 
 	"github.com/jinvei/microservice/app/userservice/wire"
@@ -19,6 +20,7 @@ func main() {
 	waitSrv.Add(2)
 
 	conf := configuration.DefaultOrDie()
+	conf.SetSystemID(strconv.Itoa(wire.SystemID))
 
 	go func() {
 		defer waitSrv.Done()

@@ -19,22 +19,27 @@ const (
 	ErrSendEmail          = codes.Code(1000112)
 	ErrVerifyCodeTooMany  = codes.Code(1000113)
 	ErrUnknownInternal    = codes.Code(1000114)
+
+	ErrUserAuthInvalidToken = codes.Code(1000115)
+	ErrUserAuthInvalidJwt   = codes.Code(1000116)
 )
 
 func init() {
 	codes.Register(map[codes.Code]string{
-		ErrInternalXorm:       "internal xorm error",
-		ErrInternalCache:      "internal cache error",
-		ErrPassword:           "password error",
-		ErrParseJwt:           "parse JWT error",
-		ErrJwtInvalid:         "jwt invalid",
-		ErrInvalidEmail:       "Invalid Email",
-		ErrInvalidPassword:    "Invalid Password",
-		ErrInvalidUsername:    "Invalid Username",
-		ErrInternalVerifyCode: "Internal Error in verify code",
-		ErrInvalidVerifyCode:  "Invalid Verify Code",
-		ErrCreateUser:         "Create User Error",
-		ErrSendEmail:          "Send Email Error",
-		ErrUnknownInternal:    "Unknown Internal Error",
+		ErrInternalXorm:         "internal xorm error",
+		ErrInternalCache:        "internal cache error",
+		ErrPassword:             "password error",
+		ErrParseJwt:             "parse JWT error",
+		ErrJwtInvalid:           "jwt invalid",
+		ErrInvalidEmail:         "Invalid Email",
+		ErrInvalidPassword:      "Invalid Password",
+		ErrInvalidUsername:      "Invalid Username",
+		ErrInternalVerifyCode:   "Internal Error in verify code",
+		ErrInvalidVerifyCode:    "Invalid Verify Code",
+		ErrCreateUser:           "Create User Error",
+		ErrSendEmail:            "Send Email Error",
+		ErrUnknownInternal:      "Unknown Internal Error",
+		ErrUserAuthInvalidToken: "Invalid Token",
+		ErrUserAuthInvalidJwt:   "Invalid JWT",
 	})
 }

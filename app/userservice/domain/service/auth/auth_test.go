@@ -16,9 +16,10 @@ import (
 
 func TestSessionCache(t *testing.T) {
 	os.Setenv("MICROSERVICE_CONFIGURATION_TOKEN", "e30K")
-	configuration.SetSystemID("10001")
+	conf := configuration.DefaultOrDie()
+	conf.SetSystemID("10001")
 
-	rediscli := cache.RedisClient(nil)
+	rediscli := cache.RedisClient(conf)
 
 	if rediscli == nil {
 		t.Fatal()
@@ -33,9 +34,10 @@ func TestSessionCache(t *testing.T) {
 
 func TestSessionCache1(t *testing.T) {
 	os.Setenv("MICROSERVICE_CONFIGURATION_TOKEN", "e30K")
-	configuration.SetSystemID("10001")
+	conf := configuration.DefaultOrDie()
+	conf.SetSystemID("10001")
 
-	rediscli := cache.RedisClient(nil)
+	rediscli := cache.RedisClient(conf)
 	if rediscli == nil {
 		t.Fatal()
 	}
@@ -55,7 +57,7 @@ func TestSessionCache1(t *testing.T) {
 func TestGennerateToken(t *testing.T) {
 	os.Setenv("MICROSERVICE_CONFIGURATION_TOKEN", "e30K")
 	conf := configuration.DefaultOrDie()
-	configuration.SetSystemID("10001")
+	conf.SetSystemID("10001")
 	db := datasource.New(conf, 10001)
 
 	iUserRepository := repository.NewUserRepository(db.Orm())

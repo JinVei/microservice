@@ -12,7 +12,6 @@ import (
 	"github.com/jinvei/microservice/app/userservice/domain/repository"
 	"github.com/jinvei/microservice/app/userservice/domain/service/auth"
 	"github.com/jinvei/microservice/base/framework/configuration"
-	"strconv"
 	"xorm.io/xorm"
 )
 
@@ -34,7 +33,3 @@ func InitAuthServer(configurationConfiguration configuration.Configuration, iUse
 const (
 	SystemID = 10001
 )
-
-func init() {
-	configuration.SetSystemID(strconv.Itoa(SystemID))
-}

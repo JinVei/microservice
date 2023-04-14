@@ -11,6 +11,7 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/jinvei/microservice/app/userservice/domain"
 	"github.com/jinvei/microservice/app/userservice/domain/entity"
+	"github.com/jinvei/microservice/app/userservice/domain/service/auth/config"
 	apicode "github.com/jinvei/microservice/base/api/codes"
 	"github.com/jinvei/microservice/base/api/proto/v1/app"
 	"github.com/jinvei/microservice/base/api/proto/v1/dto"
@@ -31,29 +32,29 @@ const (
 
 type Auth struct {
 	userRepo  domain.IUserRepository
-	cfg       svcConfig
+	cfg       config.AuthConfig
 	userSess  *UserSession
 	esender   emailsender.EmailSender
 	svcID     string
 	tokenDura time.Duration
 }
 
-type svcConfig struct {
-	JwtSecret  string `json:"jwtSecret"`
-	TokenDura  string `json:"tokenDuration"`
-	MaxSession int64  `json:"maxSession"`
+// type svcConfig struct {
+// 	JwtSecret  string `json:"jwtSecret"`
+// 	TokenDura  string `json:"tokenDuration"`
+// 	MaxSession int64  `json:"maxSession"`
 
-	evconf emailsender.Config
-}
+// 	evconf emailsender.Config
+// }
 
 func NewAuth(conf configuration.Configuration, userRepo domain.IUserRepository) domain.IAuthService {
 	rdb := cache.RedisClient(conf)
-	cfg, err := getSvcConfig(conf)
+	cfg, err := config.GetAuthConfig(conf)
 	if err != nil {
 		panic(err)
 	}
 
-	esender, err := emailsender.New(cfg.evconf)
+	esender, err := emailsender.New(cfg.ESconf)
 	if err != nil {
 		panic(err)
 	}
@@ -70,7 +71,7 @@ func NewAuth(conf configuration.Configuration, userRepo domain.IUserRepository) 
 		cfg:       cfg,
 		userSess:  NewUserSession(rdb, tdura, cfg.MaxSession),
 		esender:   esender,
-		svcID:     configuration.GetSystemID(),
+		svcID:     conf.GetSystemID(),
 		tokenDura: tdura,
 	}
 }
@@ -267,27 +268,27 @@ func (a *Auth) gennerateToken(userID, sid string) (string, error) {
 	return tokenString, err
 }
 
-func getSvcConfig(conf configuration.Configuration) (svcConfig, error) {
-	// default value
-	cfg := svcConfig{
-		JwtSecret:  "secret",
-		TokenDura:  "168h", // 7 day
-		MaxSession: 3,
-	}
-	if err := conf.GetSvcJson(configuration.GetSystemID(), "", &cfg); err != nil {
-		flog.Error(err, "conf.GetSvcJson()")
-		return cfg, err
-	}
+// func getSvcConfig(conf configuration.Configuration) (svcConfig, error) {
+// 	// default value
+// 	cfg := svcConfig{
+// 		JwtSecret:  "secret",
+// 		TokenDura:  "168h", // 7 day
+// 		MaxSession: 3,
+// 	}
+// 	if err := conf.GetSvcJson(configuration.GetSystemID(), "", &cfg); err != nil {
+// 		flog.Error(err, "conf.GetSvcJson()")
+// 		return cfg, err
+// 	}
 
-	evconf := emailsender.Config{}
-	if err := conf.GetSvcJson(configuration.GetSystemID(), "/emailverify", &evconf); err != nil {
-		flog.Error(err, "conf.GetSvcJson", "path", "/emailverify")
-		return cfg, err
-	}
-	cfg.evconf = evconf
+// 	evconf := emailsender.Config{}
+// 	if err := conf.GetSvcJson(configuration.GetSystemID(), "/emailverify", &evconf); err != nil {
+// 		flog.Error(err, "conf.GetSvcJson", "path", "/emailverify")
+// 		return cfg, err
+// 	}
+// 	cfg.evconf = evconf
 
-	return cfg, nil
-}
+// 	return cfg, nil
+// }
 
 func isValidEmail(email string) bool {
 	_, err := mail.ParseAddress(email)
