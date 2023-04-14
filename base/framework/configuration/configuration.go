@@ -11,6 +11,8 @@ type Configuration interface {
 	Get(path string) (string, error)
 	GetJson(path string, obj interface{}) error
 	GetSvcJson(systemID, subpath string, obj interface{}) error
+	SetSystemID(id string)
+	GetSystemID() string
 }
 
 func Default() (Configuration, error) {
@@ -33,12 +35,12 @@ func DefaultOrDie() Configuration {
 	return conf
 }
 
-var systemID string
+// var systemID string
 
-func SetSystemID(id string) {
-	systemID = id
-}
+// func SetSystemID(id string) {
+// 	systemID = id
+// }
 
-func GetSystemID() string {
-	return systemID
-}
+// func GetSystemID() string {
+// 	return systemID
+// }

@@ -69,6 +69,7 @@ func App(conf configuration.Configuration, systemID int, cb setupCallback) error
 	}
 
 	go func() {
+		slog.Info("Starting web server")
 		if err := srv.Start(c.Addr); err != nil && err != http.ErrServerClosed {
 			slog.Error(err, "Echo srv err")
 		}

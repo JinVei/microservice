@@ -20,7 +20,7 @@ type redisConfig struct {
 
 func RedisClient(conf configuration.Configuration) *redis.Client {
 	if conf == nil {
-		conf = configuration.DefaultOrDie()
+		panic("conf is nil")
 	}
 
 	c := getRedsiConfig(conf)
@@ -37,7 +37,7 @@ func RedisClient(conf configuration.Configuration) *redis.Client {
 }
 
 func getRedsiConfig(conf configuration.Configuration) redisConfig {
-	systemID := configuration.GetSystemID()
+	systemID := conf.GetSystemID()
 	if systemID == "" {
 		panic("systemID is empty. should set SystemID by 'configuration.SetSystemID(id)'")
 	}

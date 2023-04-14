@@ -13,7 +13,8 @@ import (
 )
 
 type EtcdStore struct {
-	cli *etcdcli.Client
+	cli      *etcdcli.Client
+	systemID string
 }
 
 func NewEtcdStore(token string) (*EtcdStore, error) {
@@ -82,4 +83,12 @@ func (store *EtcdStore) GetSvcJson(systemID, subpath string, obj interface{}) er
 	path := filepath.Join(keys.FwService, systemID, subpath)
 
 	return store.GetJson(path, obj)
+}
+
+func (store *EtcdStore) SetSystemID(id string) {
+	store.systemID = id
+}
+
+func (store *EtcdStore) GetSystemID() string {
+	return store.systemID
 }

@@ -74,7 +74,8 @@ func (il *Log) Debugf(format string, v ...any) {
 }
 
 func (il *Log) Error(err error, msg string, kv ...any) {
-	il.logger.Error(msg, il.sweetenFields(append([]any{}, zap.Any("err", err), kv))...)
+	kv = append(kv, zap.Any("err", err))
+	il.logger.Error(msg, il.sweetenFields(kv)...)
 }
 
 func (il *Log) Errorf(err error, format string, v ...any) {
