@@ -68,7 +68,7 @@ func (store *EtcdStore) GetJson(path string, obj interface{}) error {
 		return err
 	}
 	if resp.Count == 0 {
-		return fmt.Errorf("key:`%s` Not Value", path)
+		return fmt.Errorf("Configration: key `%s` is Null", path)
 	}
 
 	val := resp.Kvs[0].Value
