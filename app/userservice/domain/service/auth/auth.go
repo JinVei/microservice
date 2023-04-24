@@ -101,7 +101,7 @@ func (a *Auth) SignInByEmail(ctx context.Context, in *app.SignInByEmailReq) (*ap
 
 	sid := rand.RandStringRunes(10)
 	uid := strconv.Itoa(int(user.Id))
-	token, err := a.gennerateToken(uid, sid)
+	token, err := a.gennerateToken(uid, sid, user.Username)
 	if err != nil {
 		handleError(apicode.ErrUnknownInternal, err)
 	}
@@ -249,10 +249,11 @@ func (a *Auth) SendEmailVerifyCode(ctx context.Context, in *app.SendEmailVerifyC
 //func (a *Auth) ResetPasswordByEmail(){}
 
 // jwt
-func (a *Auth) gennerateToken(userID, sid string) (string, error) {
+func (a *Auth) gennerateToken(userID, sid, uname string) (string, error) {
 	claims := entity.Jwt{
-		Uid: userID,
-		Sid: sid,
+		Uid:   userID,
+		Sid:   sid,
+		Uname: uname,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(a.tokenDura).Unix(),
 			Issuer:    "auth-svc",
