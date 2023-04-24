@@ -29,6 +29,11 @@ func TestProducer(t *testing.T) {
 type testReceiver struct {
 }
 
+func (c *testReceiver) OnReceive(topic string, partition int, Offset int64, key, value []byte) error {
+	flog.Info("OnReceive:", "topic", topic, "partition", partition, "Offset", Offset, "key", string(key), "value", string(value))
+	return nil
+}
+
 func TestConsumer(t *testing.T) {
 	os.Setenv("MICROSERVICE_CONFIGURATION_TOKEN", "e30K")
 	conf := configuration.DefaultOrDie()
@@ -56,7 +61,29 @@ func TestConsumer(t *testing.T) {
 	time.Sleep(3 * time.Second)
 }
 
-func (c *testReceiver) OnReceive(topic string, partition int, Offset int64, key, value []byte) error {
-	flog.Info("OnReceive:", "topic", topic, "partition", partition, "Offset", Offset, "key", string(key), "value", string(value))
-	return nil
+func TestConsumerA(t *testing.T) {
+
+	// test without consumer group
+	receiver := new(testReceiver)
+
+	kpconf := &ConsumerConfig{
+		Brokers: []string{"localhost:9092"},
+		Topic:   "test",
+		// GroupID: "",
+	}
+
+	consumer := NewConsumer(*kpconf, receiver)
+
+	ctx := context.TODO()
+	err := consumer.Start(ctx, 3)
+	if err != nil {
+		t.Fatal(err)
+	}
+	time.Sleep(10 * time.Second)
+
+	ctx.Done()
+
+	consumer.Close()
+
+	time.Sleep(3 * time.Second)
 }

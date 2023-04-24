@@ -149,9 +149,11 @@ func (c *Consumer) Start(ctx context.Context, offset int64) error {
 				// flog.Error(err, "OnReceive() return err")
 				continue
 			}
-
-			if err := c.r.CommitMessages(ctx, msg); err != nil && err != io.EOF {
-				flog.Error(err, "CommitMessages err")
+			// Should CommitMessages manually if GroupID is set
+			if c.cfg.GroupID != "" {
+				if err := c.r.CommitMessages(ctx, msg); err != nil && err != io.EOF {
+					flog.Error(err, "CommitMessages err")
+				}
 			}
 		}
 	}()
