@@ -1,0 +1,65 @@
+syntax = "proto3";
+
+package jv.microservice.v1.app;
+
+option go_package = "github.com/jinvei/microservice/base/api/proto/v1/app";
+
+import "proto/v1/dto/common.proto";
+import "proto/v1/dto/reply_comment.proto";
+
+
+service ReplyCommentService {
+    rpc ListCommentPage(ListCommentPageReq) returns (ListCommentPageResp){}
+    rpc PutComment(PutCommentReq) returns (PutCommentResp){}
+    // rpc DeleteComment(CreateUserReq) returns (CreateUserResp){} TODO
+
+    rpc CreateSubject(CreateSubjectReq) returns (CreateSubjectResp){}
+    rpc GetSubject(GetSubjectReq) returns (GetSubjectResp){}
+    // rpc DisableSubject(UpdateUserReq) returns (UpdateUserResp){} TODO
+
+    // Like()
+    // dislike()
+}
+
+message ListCommentPageReq {
+    int64 Subject = 2;
+    int64 Parent = 3;
+    int64 Floor = 4;
+}
+
+message ListCommentPageResp {
+    dto.Status Status =1;
+    repeated dto.ReplyComment Comments= 2;
+}
+
+message PutCommentReq {
+    dto.ReplyCommentContent Content = 1;
+    int64 Subject = 2;
+    int64 Parent = 4;
+    int64 UserID = 5;
+    int64 ReplyTo = 6;
+}
+
+message PutCommentResp {
+    dto.Status Status =1;
+}
+
+message CreateSubjectReq {
+    int64 ObjType = 1;
+    int64 ObjID = 2;
+}
+
+message CreateSubjectResp {
+    dto.Status Status =1;
+}
+
+message GetSubjectReq {
+    int64 ID = 1;
+    int64 ObjType = 2;
+    int64 ObjID = 3;
+}
+
+message GetSubjectResp {
+    dto.Status Status =1;
+    dto.ReplyCommentSubject Subject = 2;
+}
