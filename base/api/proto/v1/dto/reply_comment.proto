@@ -13,9 +13,10 @@ message ReplyCommentItem {
     int64 UserID = 5;
     int64 Replyto = 6;
     int64 Like = 7;
-    int64 Hate = 8;
-    int64 Count = 9;
+    int64 Dislike = 8;
+    int64 ReplyCnt = 9;
     int64 State = 10;
+    int64 Seq = 11;
 }
 
 // message ReplyCommentIndexList {
@@ -24,12 +25,11 @@ message ReplyCommentItem {
 
 message ReplyCommentContent {
     int64 ID = 1;
-//    int64 Index = 2;
-    bytes Content = 3;
-    string IP = 4;
-    int64 Platform = 5;
-    string Device = 6;
-    int64 State = 7;
+    bytes Content = 2;
+    string IP = 3;
+    int64 Platform = 4;
+    string Device = 5;
+    int64 State = 6;
 }
 
 message ReplyCommentSubject {
@@ -37,8 +37,10 @@ message ReplyCommentSubject {
     int64 ObjType = 2;
     int64 ObjID = 3;
     int64 Like = 4;
-    int64 Hate = 5;
-    int64 Count = 6;
+    int64 Dislike = 5;
+    int64 ReplyCnt = 6;
+    int64 Seq = 7;
+    int64 State = 8;
 }
 
 message ReplyComment {

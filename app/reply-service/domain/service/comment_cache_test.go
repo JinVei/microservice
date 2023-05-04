@@ -23,36 +23,53 @@ func TestCacheStoreCommentItemsPage(t *testing.T) {
 	}
 
 	cm := CommentCache{
-		rdb:           rediscli,
-		cacheDra:      time.Hour,
-		indexcacheDra: time.Hour,
+		rdb:            rediscli,
+		cacheDura:      time.Hour,
+		indexcacheDura: time.Hour,
 	}
 	testdata := []*dto.ReplyCommentItem{
 		{
-			ID:    1,
-			Count: 11,
+			ID:       1,
+			ReplyCnt: 11,
 		},
 		{
-			ID:    2,
-			Count: 12,
+			ID:       2,
+			ReplyCnt: 12,
 		},
 		{
-			ID:    3,
-			Count: 13,
+			ID:       3,
+			ReplyCnt: 13,
 		},
 		{
-			ID:    4,
-			Count: 14,
+			ID:       4,
+			ReplyCnt: 14,
 		},
 		{
-			ID:    5,
-			Count: 15,
+			ID:       5,
+			ReplyCnt: 15,
 		},
 	}
 
-	err := cm.SoreCommentIndexPage(context.Background(), 0, 1, 0, testdata)
+	// err := cm.SoreCommentItemPage(context.Background(), 0, 1, 0, testdata)
+	// if err != nil {
+	// 	t.Fatal(err)
+	// }
+
+	err := cm.StoreCommentItemAttr(context.Background(), testdata[0])
 	if err != nil {
 		t.Fatal(err)
 	}
 
+}
+
+func TestCacheKeyNotExist(t *testing.T) {
+	os.Setenv("MICROSERVICE_CONFIGURATION_TOKEN", "e30K")
+	conf := configuration.DefaultOrDie()
+	conf.SetSystemID("10001")
+
+	rediscli := cache.RedisClient(conf)
+	res := rediscli.Get(context.Background(), "111")
+	if res.Err() != nil {
+		t.Fatal(res.Err())
+	}
 }

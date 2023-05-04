@@ -5,15 +5,21 @@ import (
 )
 
 const (
-	ErrReplySvcInternel = codes.Code(1000201)
-	ErrReplyCommentPage = codes.Code(1000202)
-	ErrReplyCommentItem = codes.Code(1000203)
+	ErrReplySvcInternel      = codes.Code(1000201)
+	ErrReplySvcCommentPage   = codes.Code(1000202)
+	ErrReplySvcCommentItem   = codes.Code(1000203)
+	ErrReplySvcCreateComment = codes.Code(1000204)
+	ErrReplySvcPutComment    = codes.Code(1000205)
+	ErrReplySvcGetSubject    = codes.Code(1000206)
 )
 
 func init() {
 	codes.Register(map[codes.Code]string{
-		ErrReplySvcInternel: "internal error",
-		ErrReplyCommentPage: "get comment page error",
-		ErrReplyCommentItem: "get comment item error",
+		ErrReplySvcInternel:      "internal error",
+		ErrReplySvcCommentPage:   "Get comment page error",
+		ErrReplySvcCommentItem:   "Get comment item error",
+		ErrReplySvcCreateComment: "Create Comment Error",
+		ErrReplySvcPutComment:    "Put Comment Error",
+		ErrReplySvcGetSubject:    "Get Subject Error",
 	})
 }

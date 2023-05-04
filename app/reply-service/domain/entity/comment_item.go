@@ -13,7 +13,7 @@ type CommentItem struct {
 	ReplyTo        uint64    `gorm:"column:replyto;comment:'回复用户ID/2023-04-13'"`
 	Like           uint64    `gorm:"column:like;comment:'赞/2023-04-13'"`
 	Dislike        uint64    `gorm:"column:dislike;comment:'踩/2023-04-13'"`
-	Count          uint64    `gorm:"column:count;comment:'回复数/2023-04-13'"`
+	ReplyCnt       uint64    `gorm:"column:reply_cnt;comment:'回复数/2023-04-13'"`
 	State          uint64    `gorm:"column:state;not null;comment:'状态/0启用/1删除'"`
 	Seq            uint64    `gorm:"column:state;not null;comment:'序列号, 每次更新行时+1'"`
 	CreatedAt      time.Time `gorm:"column:created_at;not null;default:CURRENT_TIMESTAMP;comment:'数据库创建时间'"`

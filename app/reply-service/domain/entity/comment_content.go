@@ -4,7 +4,6 @@ import "time"
 
 type CommentContent struct {
 	ID             uint64    `gorm:"column:id;primaryKey;autoIncrement;comment:'主键/2023-04-13'" json:"id"`
-	Index          uint64    `gorm:"column:index;not null;comment:'评论 Index ID'" json:"index"`
 	Content        []byte    `gorm:"column:content;type:varchar(512);comment:'评论内容/2023-04-13'" json:"content"`
 	IP             string    `gorm:"column:ip;type:varchar(20);comment:'IP/2023-04-13'" json:"ip"`
 	Platform       int8      `gorm:"column:platform;comment:'发布平台/2023-04-13'" json:"platform"`
