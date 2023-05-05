@@ -5,6 +5,8 @@ import (
 )
 
 const (
+	ReplySvcSystemID = 10002
+
 	ErrReplySvcInternel      = codes.Code(1000201)
 	ErrReplySvcCommentPage   = codes.Code(1000202)
 	ErrReplySvcCommentItem   = codes.Code(1000203)

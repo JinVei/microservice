@@ -5,24 +5,23 @@ import (
 )
 
 type CommentItem struct {
-	ID             uint64    `gorm:"primary_key;column:id;comment:'主键/2023-04-13'"`
-	Subject        uint64    `gorm:"column:subject;not null;comment:'评论区id'"`
-	Parent         uint64    `gorm:"column:parent;not null;comment:'父评/0代表根评论/2023-04-13'"`
-	Floor          uint64    `gorm:"column:floor;comment:'楼层/2023-04-13'"`
-	UserID         uint64    `gorm:"column:userid;comment:'用户ID/2023-04-13'"`
-	ReplyTo        uint64    `gorm:"column:replyto;comment:'回复用户ID/2023-04-13'"`
-	Like           uint64    `gorm:"column:like;comment:'赞/2023-04-13'"`
-	Dislike        uint64    `gorm:"column:dislike;comment:'踩/2023-04-13'"`
-	ReplyCnt       uint64    `gorm:"column:reply_cnt;comment:'回复数/2023-04-13'"`
-	State          uint64    `gorm:"column:state;not null;comment:'状态/0启用/1删除'"`
-	Seq            uint64    `gorm:"column:state;not null;comment:'序列号, 每次更新行时+1'"`
-	CreatedAt      time.Time `gorm:"column:created_at;not null;default:CURRENT_TIMESTAMP;comment:'数据库创建时间'"`
-	CreatedBy      uint64    `gorm:"column:create_by;not null;comment:'创建者'"`
-	CreateTime     uint64    `gorm:"column:create_time;not null;comment:'创建时间'"`
-	UpdatedAt      time.Time `gorm:"column:updated_at;not null;default:CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;comment:'数据库修改时间'"`
-	LastModifyBy   uint64    `gorm:"column:last_modify_by;comment:'最后修改者'"`
-	LastModifyTime uint64    `gorm:"column:last_modify_time;comment:'最后修改时间'"`
-	//	ContentID      uint64    `gorm:"column:content_id;not null;comment:'评论内容id'"`
+	Id             uint64    `xorm:"'id' pk autoincr unsigned bigint(20)"`    // 主键/2023-04-13
+	Subject        uint64    `xorm:"'subject' notnull unsigned bigint(20)"`   // 评论区id
+	Parent         uint64    `xorm:"'parent' notnull unsigned bigint(20)"`    // 父评/0代表根评论/2023-04-13
+	Floor          uint64    `xorm:"'floor' bigint(20)"`                      // 楼层/2023-04-13
+	UserId         uint64    `xorm:"'user_id' bigint(20)"`                    // 用户ID/2023-04-13
+	Replyto        uint64    `xorm:"'replyto' bigint(20)"`                    // 回复用户ID/2023-04-13
+	Like           uint64    `xorm:"'like' bigint(20)"`                       // 赞/2023-04-13
+	Dislike        uint64    `xorm:"'dislike' bigint(20)"`                    // 踩/2023-04-13
+	ReplyCnt       uint64    `xorm:"'reply_cnt' bigint(20)"`                  // 回复数/2023-04-13
+	State          uint64    `xorm:"'state' notnull unsigned bigint(20)"`     // 状态/0启用/1删除
+	Seq            uint64    `xorm:"'seq' bigint(20)"`                        // 序列号, 每次更新行时+1
+	CreatedAt      time.Time `xorm:"'created_at' created"`                    // 数据库创建时间
+	CreateBy       uint64    `xorm:"'create_by' notnull unsigned bigint(20)"` // 创建者
+	CreateTime     int64     `xorm:"'create_time' created"`                   // 创建时间
+	UpdatedAt      time.Time `xorm:"'updated_at' updated"`                    // 数据库修改时间
+	LastModifyBy   uint64    `xorm:"'last_modify_by' bigint(20)"`             // 最后修改者
+	LastModifyTime uint64    `xorm:"'last_modify_time' updated bigint(20)"`   // 最后修改时间
 }
 
 // define table name

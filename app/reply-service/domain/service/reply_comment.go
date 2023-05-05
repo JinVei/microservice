@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strconv"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/jinvei/microservice/app/reply-service/domain"
@@ -11,7 +12,9 @@ import (
 	apicode "github.com/jinvei/microservice/base/api/codes"
 	"github.com/jinvei/microservice/base/api/proto/v1/app"
 	"github.com/jinvei/microservice/base/api/proto/v1/dto"
+	"github.com/jinvei/microservice/base/framework/cache"
 	"github.com/jinvei/microservice/base/framework/codes"
+	"github.com/jinvei/microservice/base/framework/configuration"
 	"github.com/jinvei/microservice/base/framework/log"
 	"golang.org/x/sync/singleflight"
 )
@@ -28,7 +31,7 @@ const (
 
 type ReplyCommentService struct {
 	repo         domain.IReplyCommentRepository
-	cache        CommentCache
+	cache        *CommentCache
 	resouceGroup singleflight.Group
 	systemid     int64
 }
@@ -40,6 +43,31 @@ type dirtCache struct {
 	SubjectLike     map[uint64]bool
 }
 
+func NewReplyCommentService(repo domain.IReplyCommentRepository, conf configuration.Configuration) *ReplyCommentService {
+	systemid := conf.GetSystemID()
+	sid, _ := strconv.Atoi(systemid)
+
+	if systemid == "" {
+		panic("systemid is empty. should setting SystemID by configuration.SetSystemID(")
+	}
+	rbd := cache.RedisClient(conf)
+
+	svcCfg := defaultReplyCommentSvcConfig()
+	err := conf.GetSvcJson(systemid, "", &svcCfg)
+	if err != nil {
+		flog.Warn("NewReplyCommentService:conf.GetSvcJson() error", "err", err)
+	}
+
+	flog.Info("ReplyCommentService Cfg", "cfg", svcCfg)
+
+	cache := NewCommentCache(rbd, svcCfg.CacheDura, svcCfg.IndexCacheDura)
+	return &ReplyCommentService{
+		repo:     repo,
+		cache:    cache,
+		systemid: int64(sid),
+	}
+}
+
 func (s *ReplyCommentService) ListCommentPage(ctx context.Context, in *app.ListCommentPageReq) (*app.ListCommentPageResp, error) {
 	page := pageFromFloor(in.Floor)
 	pageResourceKey := fmt.Sprintf(pageGroupFromat, in.Subject, in.Parent, page)
@@ -47,7 +75,7 @@ func (s *ReplyCommentService) ListCommentPage(ctx context.Context, in *app.ListC
 	// group page resource.
 	// only one request would be executed for per page resouce where in case of concurrency
 	resouce, err, shared := s.resouceGroup.Do(pageResourceKey, func() (interface{}, error) {
-		ids, err := s.getCommentPageIds(ctx, uint64(in.Subject), uint64(in.Parent), uint64(page))
+		ids, err := s.getCommentPageIds(ctx, uint64(in.Subject), uint64(in.Parent), uint64(page), uint64(in.Floor))
 		if err != nil {
 			flog.Error(err, "getCommentPageIds(ctx, in.Subject, in.Parent, page)", "in.Subject", in.Subject, "in.Parent", in.Parent, "page", page)
 			return apicode.ErrReplySvcCommentPage, nil
@@ -116,12 +144,12 @@ func (s *ReplyCommentService) PutComment(ctx context.Context, in *app.PutComment
 	// insert comment to db
 	item, content, err := s.repo.CreateComment(ctx, uint64(in.Subject), uint64(in.Parent), uint64(in.UserID), uint64(in.ReplyTo), uint64(floor),
 		entity.CommentContent{
-			Content:   in.Content.Content,
-			IP:        in.Content.IP,
-			Platform:  int8(in.Content.Platform),
-			Device:    in.Content.Device,
-			State:     uint64(in.Content.State),
-			CreatedBy: uint64(s.systemid),
+			Content:  string(in.Content.Content),
+			Ip:       in.Content.IP,
+			Platform: int8(in.Content.Platform),
+			Device:   in.Content.Device,
+			State:    uint64(in.Content.State),
+			CreateBy: uint64(s.systemid),
 		})
 	if err != nil {
 		return &app.PutCommentResp{
@@ -129,10 +157,9 @@ func (s *ReplyCommentService) PutComment(ctx context.Context, in *app.PutComment
 		}, nil
 	}
 
-	// TODO StartPoint
 	page := pageFromFloor(int64(item.Floor))
 
-	if err := s.cache.StoreCommentPageIds(ctx, item.Subject, item.Parent, uint64(page), []uint64{item.ID}); err != nil {
+	if err := s.cache.StoreCommentPageIds(ctx, item.Subject, item.Parent, uint64(page), []uint64{item.Id}); err != nil {
 		flog.Error(err, "cache.StoreCommentPageIds", "item", item)
 	}
 
@@ -157,7 +184,7 @@ func (s *ReplyCommentService) PutComment(ctx context.Context, in *app.PutComment
 
 	// incr parent reply_cnt
 	if item.Parent != 0 {
-		err = s.incrCommentReplyCnt(ctx, item.ID, item.Subject, item.Parent, item.Floor)
+		err = s.incrCommentReplyCnt(ctx, item.Id, item.Subject, item.Parent, item.Floor)
 		if err != nil {
 			return &app.PutCommentResp{Status: apicode.ErrReplySvcPutComment.ToStatus()}, nil
 		}
@@ -308,14 +335,14 @@ func (s *ReplyCommentService) loadCommentContentToComments(ctx context.Context, 
 
 		for _, v := range idx {
 			d := &dto.ReplyCommentContent{
-				ID:       int64(v.ID),
+				ID:       int64(v.Id),
 				Content:  []byte(v.Content),
-				IP:       v.IP,
+				IP:       v.Ip,
 				Platform: int64(v.Platform),
 				Device:   v.Device,
 				State:    int64(v.State),
 			}
-			comments[v.ID].Content = d
+			comments[v.Id].Content = d
 			if err := s.cache.StoreCommentContent(ctx, d); err != nil {
 				flog.Error(err, "StoreCommentIndex()", "index", d)
 			}
@@ -353,18 +380,18 @@ func (s *ReplyCommentService) loadCommentIndexToComments(ctx context.Context, id
 
 		for _, v := range idx {
 			d := &dto.ReplyCommentItem{
-				ID:       int64(v.ID),
+				ID:       int64(v.Id),
 				Subject:  int64(v.Subject),
 				Parent:   int64(v.Parent),
 				Floor:    int64(v.Floor),
-				UserID:   int64(v.UserID),
-				Replyto:  int64(v.ReplyTo),
+				UserID:   int64(v.UserId),
+				Replyto:  int64(v.Replyto),
 				Like:     int64(v.Like),
 				Dislike:  int64(v.Dislike),
 				ReplyCnt: int64(v.ReplyCnt),
 				State:    int64(v.State),
 			}
-			comments[v.ID].Item = d
+			comments[v.Id].Item = d
 			if err := s.cache.StoreCommentItemAttr(ctx, d); err != nil {
 				flog.Error(err, "StoreCommentItemAttr()", "index", d)
 			}
@@ -382,13 +409,13 @@ func pageFromFloor(floor int64) int64 {
 	return page
 }
 
-func (s *ReplyCommentService) getCommentPageIds(ctx context.Context, subject, parent, page uint64) ([]uint64, error) {
+func (s *ReplyCommentService) getCommentPageIds(ctx context.Context, subject, parent, page, floor uint64) ([]uint64, error) {
 	// get page from cache
 	ids, err := s.cache.GetCommentPageIds(ctx, subject, parent, page)
 	if err == ErrCacheMiss {
 		// load index data from db to cache
-		// if page hasn't data(cause by delete), skip next page.
-		entitys, err := s.repo.ListCommentsPageIds(ctx, subject, parent, int(page), numPerPage)
+		// if page hasn't data(cause by delete), skip to next page.
+		entitys, err := s.repo.ListCommentsPageIds(ctx, subject, parent, int(floor), numPerPage)
 		if err != nil {
 			return nil, err
 		}
@@ -477,12 +504,12 @@ func (s *ReplyCommentService) incrSubjectReplyCnt(ctx context.Context, id uint64
 
 func newCommentIndexFromEntity(v *entity.CommentItem) *dto.ReplyCommentItem {
 	d := &dto.ReplyCommentItem{
-		ID:       int64(v.ID),
+		ID:       int64(v.Id),
 		Subject:  int64(v.Subject),
 		Parent:   int64(v.Parent),
 		Floor:    int64(v.Floor),
-		UserID:   int64(v.UserID),
-		Replyto:  int64(v.ReplyTo),
+		UserID:   int64(v.UserId),
+		Replyto:  int64(v.Replyto),
 		Like:     int64(v.Like),
 		Dislike:  int64(v.Dislike),
 		ReplyCnt: int64(v.ReplyCnt),
@@ -493,9 +520,9 @@ func newCommentIndexFromEntity(v *entity.CommentItem) *dto.ReplyCommentItem {
 
 func newCommentContentFromEntity(v *entity.CommentContent) *dto.ReplyCommentContent {
 	d := &dto.ReplyCommentContent{
-		ID:       int64(v.ID),
-		Content:  v.Content,
-		IP:       v.IP,
+		ID:       int64(v.Id),
+		Content:  []byte(v.Content),
+		IP:       v.Ip,
 		Platform: int64(v.Platform),
 		Device:   v.Device,
 		State:    int64(v.State),
@@ -505,9 +532,9 @@ func newCommentContentFromEntity(v *entity.CommentContent) *dto.ReplyCommentCont
 
 func newSubjectFromEntity(v *entity.CommentSubject) *dto.ReplyCommentSubject {
 	d := &dto.ReplyCommentSubject{
-		ID:       int64(v.ID),
+		ID:       int64(v.Id),
 		ObjType:  int64(v.ObjType),
-		ObjID:    int64(v.ObjID),
+		ObjID:    int64(v.ObjId),
 		Like:     int64(v.Like),
 		Dislike:  int64(v.Dislike),
 		ReplyCnt: int64(v.ReplyCnt),

@@ -46,11 +46,29 @@ var (
 
 type bytes []byte
 
+func NewCommentCache(rdb *redis.Client, cachedura, indexDura string) *CommentCache {
+	cd, err := time.ParseDuration(cachedura)
+	if err != nil {
+		cd = time.Hour * 24 * 7 // default 7 dat
+	}
+
+	id, err := time.ParseDuration(indexDura)
+	if err != nil {
+		id = time.Hour * 24 * 14 // default 14 dat
+	}
+
+	return &CommentCache{
+		rdb:       rdb,
+		cacheDura: cd,
+		indexDura: id,
+	}
+}
+
 // TODO improve by local cache
 type CommentCache struct {
-	rdb            *redis.Client
-	cacheDura      time.Duration
-	indexcacheDura time.Duration
+	rdb       *redis.Client
+	cacheDura time.Duration
+	indexDura time.Duration
 }
 
 // GetCommentPageIds get Comment item from cache

@@ -17,31 +17,31 @@ CREATE TABLE `comment_subject` (
   PRIMARY KEY (`id`)  
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='评论区表/2023-04-13';
 CREATE INDEX type_objid
-ON `reply_comments` (obj_type, obj_id);
+ON `comment_subject` (obj_type, obj_id);
 
 CREATE TABLE `comment_item` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键/2023-04-13',
   `subject` bigint(20) unsigned NOT NULL COMMENT '评论区id',
   `parent` bigint(20) unsigned NOT NULL COMMENT '父评/0代表根评论/2023-04-13',
   `floor` bigint(20) DEFAULT NULL COMMENT '楼层/2023-04-13',
-  `userid` bigint(20) DEFAULT NULL COMMENT '用户ID/2023-04-13',
+  `user_id` bigint(20) DEFAULT NULL COMMENT '用户ID/2023-04-13',
   `replyto` bigint(20) DEFAULT NULL COMMENT '回复用户ID/2023-04-13',
   `like` bigint(20) DEFAULT NULL COMMENT '赞/2023-04-13',
   `dislike` bigint(20) DEFAULT NULL COMMENT '踩/2023-04-13',
   `reply_cnt` bigint(20) DEFAULT NULL COMMENT '回复数/2023-04-13',
   `state` bigint(20) unsigned NOT NULL COMMENT '状态/0启用/1删除',
   `seq` bigint(20) unsigned DEFAULT NULL COMMENT '序列号, 每次更新行时+1',
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '数据库创建时间',
+  `created_at` timestamp DEFAULT CURRENT_TIMESTAMP COMMENT '数据库创建时间',
   `create_by` bigint(20) unsigned NOT NULL COMMENT '创建者',
   `create_time` bigint(20) unsigned NOT NULL COMMENT '创建时间',
-  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '数据库修改时间',
+  `updated_at` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '数据库修改时间',
   `last_modify_by` bigint(20) unsigned DEFAULT NULL COMMENT '最后修改者',
   `last_modify_time` bigint(20) unsigned DEFAULT NULL COMMENT '最后修改时间',
   PRIMARY KEY (`id`),
-  UNIQUE (subject, parent, floor)
+  CONSTRAINT UC_Item_Floor UNIQUE (subject, parent, floor)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='评论表/2023-04-13';
 CREATE INDEX subject_parent_floor_createdat
-ON `comment_index` (subject, parent, floor, created_at);
+ON `comment_item` (subject, parent, floor, created_at);
 
 
 CREATE TABLE `comment_content` (

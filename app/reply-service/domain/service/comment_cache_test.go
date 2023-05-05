@@ -23,9 +23,9 @@ func TestCacheStoreCommentItemsPage(t *testing.T) {
 	}
 
 	cm := CommentCache{
-		rdb:            rediscli,
-		cacheDura:      time.Hour,
-		indexcacheDura: time.Hour,
+		rdb:       rediscli,
+		cacheDura: time.Hour,
+		indexDura: time.Hour,
 	}
 	testdata := []*dto.ReplyCommentItem{
 		{
