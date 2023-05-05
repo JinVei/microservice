@@ -41,7 +41,7 @@ func (s *DataSource) Orm() *xorm.Engine {
 
 	c := s.getConfig()
 
-	flog.Debugf("Datasource config: %v", c)
+	flog.Info("Init Datasource config", "config", c)
 
 	xe, err := xorm.NewEngine(c.Dialect, c.Dsn)
 	if err != nil {
@@ -79,8 +79,23 @@ func New(conf configuration.Configuration, systemID int) *DataSource {
 	}
 }
 
+func defaultConfig() Config {
+	return Config{
+		Dialect:      "mysql",
+		Debug:        true,
+		EnableLog:    true,
+		Prefix:       "",
+		MinPoolSize:  2,
+		MaxPoolSize:  10,
+		IdleTimeout:  "10s",
+		QueryTimeout: "2s",
+		ExecTimeout:  "2s",
+		TranTimeout:  "2s",
+	}
+}
+
 func (s *DataSource) getConfig() *Config {
-	c := Config{}
+	c := defaultConfig()
 	path := filepath.Join(confkey.FwDatasource, strconv.Itoa(s.systemID))
 	if err := s.conf.GetJson(path, &c); err != nil {
 		flog.Error(err, "GetJson() err:")

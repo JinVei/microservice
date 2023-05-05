@@ -4,8 +4,13 @@ import (
 	"errors"
 	"os"
 
+	"encoding/base64"
+
 	"github.com/jinvei/microservice/base/framework/configuration/store"
+	"github.com/jinvei/microservice/base/framework/log"
 )
+
+var flog = log.Default
 
 type Configuration interface {
 	Get(path string) (string, error)
@@ -26,7 +31,8 @@ func Default() (Configuration, error) {
 func DefaultOrDie() Configuration {
 	token := os.Getenv("MICROSERVICE_CONFIGURATION_TOKEN")
 	if token == "" {
-		panic(errors.New("env `MICROSERVICE_CONFIGURATION_TOKEN` is empty"))
+		token = base64.StdEncoding.EncodeToString([]byte("{}"))
+		flog.Warn("env `MICROSERVICE_CONFIGURATION_TOKEN` is empty. use default value", "MICROSERVICE_CONFIGURATION_TOKEN", token)
 	}
 	conf, err := store.NewEtcdStore(token)
 	if err != nil {

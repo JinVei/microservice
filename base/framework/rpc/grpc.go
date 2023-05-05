@@ -25,6 +25,13 @@ type config struct {
 	SvcName string `json:"svcName"`
 }
 
+func defaultConfig() config {
+	return config{
+		Addr:    ":9091",
+		SvcName: "Unknown",
+	}
+}
+
 func Serve(conf configuration.Configuration, systemID int, cb setupCallback) error {
 	if conf == nil {
 		c, err := configuration.Default()
@@ -34,13 +41,10 @@ func Serve(conf configuration.Configuration, systemID int, cb setupCallback) err
 		conf = c
 	}
 
-	sconfig := config{}
-
+	sconfig := defaultConfig()
 	if err := conf.GetJson(filepath.Join("/microservice/framework/rpc/", strconv.Itoa(systemID)), &sconfig); err != nil {
-		return err
-	}
-	if sconfig.Addr == "" {
-		sconfig.Addr = ":9090"
+		//return err
+		slog.Warn("conf.GetJson() error", "err", err)
 	}
 
 	srv := grpc.NewServer(
