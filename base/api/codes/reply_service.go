@@ -13,6 +13,7 @@ const (
 	ErrReplySvcCreateComment = codes.Code(1000204)
 	ErrReplySvcPutComment    = codes.Code(1000205)
 	ErrReplySvcGetSubject    = codes.Code(1000206)
+	ErrReplySvcNotFound      = codes.Code(1000207)
 )
 
 func init() {
@@ -23,5 +24,6 @@ func init() {
 		ErrReplySvcCreateComment: "Create Comment Error",
 		ErrReplySvcPutComment:    "Put Comment Error",
 		ErrReplySvcGetSubject:    "Get Subject Error",
+		ErrReplySvcNotFound:      "Not Found",
 	})
 }

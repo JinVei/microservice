@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/jinvei/microservice/base/framework/log"
@@ -13,10 +12,6 @@ import (
 )
 
 var flog = log.Default
-
-var (
-	DBRecordNotFound = errors.New("record not found")
-)
 
 type ReplyCommentRepository struct {
 	xorm     *xorm.Engine
@@ -73,7 +68,7 @@ func (repo *ReplyCommentRepository) GetCommentLastFloor(ctx context.Context, sub
 	ok, err := repo.xorm.Context(ctx).Where("subject = ? AND parent = ?", subject, parent).Desc("floor").Limit(1).Get(&ci)
 
 	if !ok {
-		return 0, DBRecordNotFound
+		return 0, domain.DBRecordNotFound
 	}
 
 	return ci.Floor, err
@@ -114,9 +109,9 @@ func (repo *ReplyCommentRepository) GetSubject(ctx context.Context, id uint64) (
 		return entity.CommentSubject{}, err
 	}
 	if !exist {
-		return entity.CommentSubject{}, DBRecordNotFound
+		return entity.CommentSubject{}, domain.DBRecordNotFound
 	}
-	return entity.CommentSubject{}, nil
+	return sbj, nil
 }
 
 // }

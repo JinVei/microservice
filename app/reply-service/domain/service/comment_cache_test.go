@@ -55,7 +55,7 @@ func TestCacheStoreCommentItemsPage(t *testing.T) {
 	// 	t.Fatal(err)
 	// }
 
-	err := cm.StoreCommentItemAttr(context.Background(), testdata[0])
+	err := cm.StoreCommentItem(context.Background(), testdata[0])
 	if err != nil {
 		t.Fatal(err)
 	}

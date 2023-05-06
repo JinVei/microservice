@@ -2,8 +2,13 @@ package domain
 
 import (
 	"context"
+	"errors"
 
 	"github.com/jinvei/microservice/app/reply-service/domain/entity"
+)
+
+var (
+	DBRecordNotFound = errors.New("record not found")
 )
 
 type IReplyCommentRepository interface {

@@ -16,13 +16,13 @@ const (
 	CacheKeyCommentContennt = "micro:reply-svc:comment:content:%d"
 	CacheKeyCommentItem     = "micro:reply-svc:comment:item:%d"
 
-	CKCommentPage            = "micro:reply-svc:comment:page:%d:%d:%d" // subject/parent/page
-	CKCommentItemPage        = "micro:reply-svc:comment:item:page:%d:%d:%d"
-	CKCommentContentPage     = "micro:reply-svc:comment:content:page:%d:%d:%d"
-	CKLastFloor              = "micro:reply-svc:last:floor:%d:%d" // subject/parent
-	CKCommentItemAttr        = "micro:reply-svc:comment:item:attr:%d"
-	CKCommentItemSubjectAttr = "micro:reply-svc:subject:attr:%d"
-	CKCommentsubject         = "micro:reply-svc:subject:%d"
+	CKCommentPage        = "micro:reply-svc:comment:page:%d:%d:%d" // subject/parent/page
+	CKCommentItemPage    = "micro:reply-svc:comment:item:page:%d:%d:%d"
+	CKCommentContentPage = "micro:reply-svc:comment:content:page:%d:%d:%d"
+	CKLastFloor          = "micro:reply-svc:last-floor:%d:%d" // subject/parent
+	//CKCommentItemAttr        = "micro:reply-svc:comment:item:attr:%d"
+	//CKCommentItemSubjectAttr = "micro:reply-svc:subject:attr:%d"
+	CKCommentsubject = "micro:reply-svc:subject:%d"
 
 	IndexAttrSub      = "sub"
 	IndexAttrParent   = "parent"
@@ -88,6 +88,10 @@ func (c *CommentCache) GetCommentPageIds(ctx context.Context, subject, parent, p
 		return nil, err
 	}
 
+	if len(d) == 0 {
+		return nil, ErrCacheMiss
+	}
+
 	indexes := make([]uint64, 0, len(d))
 	for _, v := range d {
 		i, err := strconv.Atoi(v)
@@ -132,6 +136,7 @@ func (c *CommentCache) StoreCommentContent(ctx context.Context, content *dto.Rep
 	if status.Err() != nil {
 		return status.Err()
 	}
+	c.rdb.Expire(ctx, key, c.cacheDura)
 
 	return nil
 }
@@ -150,6 +155,9 @@ func (c *CommentCache) GetSubject(ctx context.Context, id uint64) (*dto.ReplyCom
 	attrs, err := res.Result()
 	if err != nil {
 		return nil, err
+	}
+	if len(attrs) == 0 {
+		return nil, ErrCacheMiss
 	}
 
 	var val int
@@ -214,6 +222,10 @@ func (c *CommentCache) GetCommentItem(ctx context.Context, id uint64) (*dto.Repl
 		return nil, err
 	}
 
+	if len(attrs) == 0 {
+		return nil, ErrCacheMiss
+	}
+
 	var val int
 	d.ID = int64(id)
 
@@ -250,35 +262,35 @@ func (c *CommentCache) GetCommentItem(ctx context.Context, id uint64) (*dto.Repl
 	return d, nil
 }
 
-func (c *CommentCache) StoreCommentIndex(ctx context.Context, idx *dto.ReplyCommentItem) error {
-	key := fmt.Sprintf(CacheKeyCommentItem, idx.ID)
-	var attrKV []interface{}
-	attrKV = append(attrKV,
-		IndexAttrSub, idx.Subject,
-		IndexAttrParent, idx.Parent,
-		IndexAttrFloor, idx.Floor,
-		IndexAttrUid, idx.UserID,
-		IndexAttrReplyto, idx.Replyto,
-		IndexAttrLike, idx.Like,
-		IndexAttrDislike, idx.Dislike,
-		IndexAttrReplyCnt, idx.ReplyCnt,
-		IndexAttrState, idx.State,
-		IndexAttrSeq, idx.Seq,
-		//IndexAttrContentID, idx.ContentID
-	)
+// func (c *CommentCache) StoreCommentIndex(ctx context.Context, idx *dto.ReplyCommentItem) error {
+// 	key := fmt.Sprintf(CacheKeyCommentItem, idx.ID)
+// 	var attrKV []interface{}
+// 	attrKV = append(attrKV,
+// 		IndexAttrSub, idx.Subject,
+// 		IndexAttrParent, idx.Parent,
+// 		IndexAttrFloor, idx.Floor,
+// 		IndexAttrUid, idx.UserID,
+// 		IndexAttrReplyto, idx.Replyto,
+// 		IndexAttrLike, idx.Like,
+// 		IndexAttrDislike, idx.Dislike,
+// 		IndexAttrReplyCnt, idx.ReplyCnt,
+// 		IndexAttrState, idx.State,
+// 		IndexAttrSeq, idx.Seq,
+// 		//IndexAttrContentID, idx.ContentID
+// 	)
 
-	res := c.rdb.HSet(ctx, key, attrKV...)
-	if res.Err() != nil {
-		return res.Err()
-	}
+// 	res := c.rdb.HSet(ctx, key, attrKV...)
+// 	if res.Err() != nil {
+// 		return res.Err()
+// 	}
 
-	res2 := c.rdb.Expire(ctx, key, c.cacheDura)
-	if res2.Err() != nil {
-		flog.Warn("rdb.Expire() err", "err", res2.Err())
-	}
+// 	res2 := c.rdb.Expire(ctx, key, c.cacheDura)
+// 	if res2.Err() != nil {
+// 		flog.Warn("rdb.Expire() err", "err", res2.Err())
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
 func (c *CommentCache) GetCommentItemPage(ctx context.Context, subject, parent, page uint64) ([]*dto.ReplyCommentItem, error) {
 	key := fmt.Sprintf(CKCommentItemPage, subject, parent, page)
@@ -434,7 +446,7 @@ func (c *CommentCache) GetCommentContentPage(ctx context.Context, subject, paren
 const scriptIncrIfExist = `
 local key = KEYS[1]
 
-local key_exists = redis.call('EXISTS', itemsKey)
+local key_exists = redis.call('EXISTS', key)
 if key_exists == 0 then
   return -1
 end
@@ -446,7 +458,7 @@ return res
 
 func (c *CommentCache) GetLastFloor(ctx context.Context, subject, parent uint64) (int64, error) {
 	key := fmt.Sprintf(CKLastFloor, subject, parent)
-	res := c.rdb.Eval(ctx, scriptIncrIfExist, []string{key}, nil)
+	res := c.rdb.Eval(ctx, scriptIncrIfExist, []string{key})
 	if res.Err() != nil {
 		return -1, res.Err()
 	}
@@ -464,19 +476,19 @@ func (c *CommentCache) GetLastFloor(ctx context.Context, subject, parent uint64)
 const scriptSetIfNotExist = `
 local key = KEYS[1]
 
-local key_exists = redis.call('EXISTS', itemsKey)
+local key_exists = redis.call('EXISTS', key)
 if key_exists == 1 then
   return 0
 end
 
-local res = redis.call('set', key, ARGV[1] EX ARGV[2])
+local res = redis.call('set', key, ARGV[1])
 
 return res
 `
 
 func (c *CommentCache) StoretLastFloorIfNotExist(ctx context.Context, subject, parent uint64, floor uint64) error {
 	key := fmt.Sprintf(CKLastFloor, subject, parent)
-	res := c.rdb.Eval(ctx, scriptSetIfNotExist, []string{key}, []interface{}{floor, c.cacheDura})
+	res := c.rdb.Eval(ctx, scriptSetIfNotExist, []string{key}, []interface{}{floor, c.cacheDura.Seconds()})
 	if res.Err() != nil {
 		return res.Err()
 	}
@@ -552,7 +564,7 @@ func (c *CommentCache) StoretLastFloorIfNotExist(ctx context.Context, subject, p
 
 // }
 
-const scriptStoreCommentItemAttr = `
+const scriptStoreAttr = `
 local attr_key = KEYS[1]
 
 local kvlen = ARGV[1]
@@ -585,17 +597,18 @@ return 1
 
 // require seq filed
 func (c *CommentCache) StoreAttr(ctx context.Context, attrKey string, len int, attrs []string, vals []interface{}) error {
-	res := c.rdb.Eval(ctx, scriptStoreCommentItemAttr, append([]string{attrKey}, attrs...), append([]interface{}{len}, vals...))
+	res := c.rdb.Eval(ctx, scriptStoreAttr, append([]string{attrKey}, attrs...), append([]interface{}{len}, vals...))
+	c.rdb.Expire(ctx, attrKey, c.cacheDura)
 	return res.Err()
 }
 
-func (c *CommentCache) StoreCommentItemAttr(ctx context.Context, item *dto.ReplyCommentItem) error {
+func (c *CommentCache) StoreCommentItem(ctx context.Context, item *dto.ReplyCommentItem) error {
 	like := item.Like
 	dislike := item.Dislike
 	replyCnt := item.ReplyCnt
 	seq := item.Seq
 
-	attrKey := fmt.Sprintf(CKCommentItemAttr, item.ID)
+	attrKey := fmt.Sprintf(CacheKeyCommentItem, item.ID)
 
 	// res := c.rdb.Eval(ctx, scriptStoreCommentItemAttr,
 	// 	[]string{attrKey, IndexAttrSeq, IndexAttrLike, IndexAttrDislike, IndexAttrReplyCnt, IndexAttrSub, IndexAttrParent, IndexAttrFloor, IndexAttrReplyto, IndexAttrState, IndexAttrUid},
@@ -603,7 +616,7 @@ func (c *CommentCache) StoreCommentItemAttr(ctx context.Context, item *dto.Reply
 
 	return c.StoreAttr(ctx, attrKey, 10,
 		[]string{IndexAttrSeq, IndexAttrLike, IndexAttrDislike, IndexAttrReplyCnt, IndexAttrSub, IndexAttrParent, IndexAttrFloor, IndexAttrReplyto, IndexAttrState, IndexAttrUid},
-		[]interface{}{seq, like, dislike, replyCnt, item.Subject, item.Parent, item.Floor, item.Replyto, item.State, item.ID})
+		[]interface{}{seq, like, dislike, replyCnt, item.Subject, item.Parent, item.Floor, item.Replyto, item.State, item.UserID})
 
 }
 
@@ -634,8 +647,8 @@ const scriptHIncrWithSeq = `
 local key = KEYS[1]
 local field = KEYS[2]
 
-local key_exists = redis.call('EXISTS', attr_key)
-if key_exists == 1 then
+local key_exists = redis.call('EXISTS', key)
+if key_exists == 0 then
   return 0
 end
 
@@ -648,7 +661,7 @@ return 1
 `
 
 func (c *CommentCache) IncrCommentReplyCnt(ctx context.Context, id uint64) error {
-	key := fmt.Sprintf(CKCommentItemAttr, id)
+	key := fmt.Sprintf(CacheKeyCommentItem, id)
 
 	res := c.rdb.Eval(ctx, scriptHIncrWithSeq, []string{key, IndexAttrReplyCnt})
 
@@ -662,7 +675,7 @@ func (c *CommentCache) IncrCommentReplyCnt(ctx context.Context, id uint64) error
 }
 
 func (c *CommentCache) IncrSubjectReplyCnt(ctx context.Context, id uint64) error {
-	key := fmt.Sprintf(CKCommentItemSubjectAttr, id)
+	key := fmt.Sprintf(CKCommentsubject, id)
 
 	res := c.rdb.Eval(ctx, scriptHIncrWithSeq, []string{key, IndexAttrReplyCnt})
 

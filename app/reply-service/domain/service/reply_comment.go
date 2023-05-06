@@ -88,7 +88,7 @@ func (s *ReplyCommentService) ListCommentPage(ctx context.Context, in *app.ListC
 		// 	return apicode.ErrReplySvcCommentItem, nil
 		// }
 
-		if err := s.loadCommentIndexToComments(ctx, ids, commentsM); err != nil {
+		if err := s.loadCommentItemToComments(ctx, ids, commentsM); err != nil {
 			flog.Errorf(err, "s.loadCommentIndexToComments(ctx,%v,%v):", ids, commentsM)
 			return apicode.ErrReplySvcCommentItem, nil
 		}
@@ -142,7 +142,7 @@ func (s *ReplyCommentService) PutComment(ctx context.Context, in *app.PutComment
 	}
 
 	// insert comment to db
-	item, content, err := s.repo.CreateComment(ctx, uint64(in.Subject), uint64(in.Parent), uint64(in.UserID), uint64(in.ReplyTo), uint64(floor),
+	item, content, err := s.repo.CreateComment(ctx, uint64(in.Subject), uint64(in.Parent), uint64(floor), uint64(in.UserID), uint64(in.ReplyTo),
 		entity.CommentContent{
 			Content:  string(in.Content.Content),
 			Ip:       in.Content.IP,
@@ -152,6 +152,7 @@ func (s *ReplyCommentService) PutComment(ctx context.Context, in *app.PutComment
 			CreateBy: uint64(s.systemid),
 		})
 	if err != nil {
+		flog.Error(err, "repo.CreateComment()", "in.Subject", in.Subject, "in.Parent", in.Parent, "floor", floor)
 		return &app.PutCommentResp{
 			Status: apicode.ErrReplySvcCreateComment.ToStatus(),
 		}, nil
@@ -165,7 +166,7 @@ func (s *ReplyCommentService) PutComment(ctx context.Context, in *app.PutComment
 
 	// cache comment item
 	//s.cache.PutCommentItem(ctx, newCommentIndexFromEntity(&item))
-	if err := s.cache.StoreCommentItemAttr(ctx, newCommentIndexFromEntity(&item)); err != nil {
+	if err := s.cache.StoreCommentItem(ctx, newCommentIndexFromEntity(&item)); err != nil {
 		flog.Error(err, "cache.StoreCommentItemAttr", "item", item)
 	}
 
@@ -179,14 +180,17 @@ func (s *ReplyCommentService) PutComment(ctx context.Context, in *app.PutComment
 	// inrc subject reply_cnt
 	err = s.incrSubjectReplyCnt(ctx, item.Subject)
 	if err != nil {
-		return &app.PutCommentResp{Status: apicode.ErrReplySvcPutComment.ToStatus()}, nil
+		flog.Error(err, "s.incrSubjectReplyCnt()", "item.Subject", item.Subject)
+		// return &app.PutCommentResp{Status: apicode.ErrReplySvcPutComment.ToStatus()}, nil
 	}
 
 	// incr parent reply_cnt
 	if item.Parent != 0 {
 		err = s.incrCommentReplyCnt(ctx, item.Id, item.Subject, item.Parent, item.Floor)
 		if err != nil {
-			return &app.PutCommentResp{Status: apicode.ErrReplySvcPutComment.ToStatus()}, nil
+			flog.Error(err, "s.incrCommentReplyCnt()", "item.Id", item.Id, "item.Subject",
+				item.Subject, "item.Parent", item.Parent, "item.Floor", item.Floor)
+			// return &app.PutCommentResp{Status: apicode.ErrReplySvcPutComment.ToStatus()}, nil
 		}
 	}
 
@@ -219,10 +223,13 @@ func (s *ReplyCommentService) GetSubject(ctx context.Context, in *app.GetSubject
 			flog.Error(err, "s.cache.StoreSubject()", "subject", subject)
 		}
 
-		return nil, nil
+		return subject, nil
 	})
 
 	if err != nil {
+		if err == domain.DBRecordNotFound {
+			return &app.GetSubjectResp{Status: apicode.ErrReplySvcNotFound.ToStatus()}, nil
+		}
 		return &app.GetSubjectResp{Status: apicode.ErrReplySvcGetSubject.ToStatus()}, nil
 	}
 
@@ -310,14 +317,14 @@ func (s *ReplyCommentService) sortCommentToSlice(m map[uint64]*dto.ReplyComment)
 
 func (s *ReplyCommentService) loadCommentContentToComments(ctx context.Context, ids []uint64, comments map[uint64]*dto.ReplyComment) error {
 	missIds := []uint64{}
-	for i, idx := range ids {
+	for _, idx := range ids {
 		if _, exist := comments[idx]; !exist {
 			comments[idx] = &dto.ReplyComment{}
 		}
 
 		content, err := s.cache.GetCommentContent(ctx, int64(idx))
 		if err == ErrCacheMiss {
-			missIds[i] = idx
+			missIds = append(missIds, idx)
 			continue
 		} else if err != nil {
 			flog.Error(err, "cache.GetCommentContent() err:")
@@ -352,16 +359,16 @@ func (s *ReplyCommentService) loadCommentContentToComments(ctx context.Context, 
 	return nil
 }
 
-func (s *ReplyCommentService) loadCommentIndexToComments(ctx context.Context, ids []uint64, comments map[uint64]*dto.ReplyComment) error {
+func (s *ReplyCommentService) loadCommentItemToComments(ctx context.Context, ids []uint64, comments map[uint64]*dto.ReplyComment) error {
 	missIds := []uint64{}
-	for i, idx := range ids {
+	for _, idx := range ids {
 		if _, exist := comments[idx]; !exist {
 			comments[idx] = &dto.ReplyComment{}
 		}
 
 		index, err := s.cache.GetCommentItem(ctx, idx)
 		if err == ErrCacheMiss {
-			missIds[i] = idx
+			missIds = append(missIds, idx)
 			continue
 		} else if err != nil {
 			flog.Error(err, "cache.GetCommentContent() err:")
@@ -392,8 +399,8 @@ func (s *ReplyCommentService) loadCommentIndexToComments(ctx context.Context, id
 				State:    int64(v.State),
 			}
 			comments[v.Id].Item = d
-			if err := s.cache.StoreCommentItemAttr(ctx, d); err != nil {
-				flog.Error(err, "StoreCommentItemAttr()", "index", d)
+			if err := s.cache.StoreCommentItem(ctx, d); err != nil {
+				flog.Error(err, "StoreCommentItem()", "index", d)
 			}
 		}
 	}
@@ -418,6 +425,9 @@ func (s *ReplyCommentService) getCommentPageIds(ctx context.Context, subject, pa
 		entitys, err := s.repo.ListCommentsPageIds(ctx, subject, parent, int(floor), numPerPage)
 		if err != nil {
 			return nil, err
+		}
+		if len(entitys) == 0 {
+			return nil, nil
 		}
 		ids = entitys
 		if err := s.cache.StoreCommentPageIds(ctx, subject, parent, page, ids); err != nil {
