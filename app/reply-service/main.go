@@ -21,7 +21,7 @@ func main() {
 	conf.SetSystemID(strconv.Itoa(systemID))
 
 	db := datasource.New(conf, systemID)
-	repo := repository.NewReplyCommentRepository(db.Orm())
+	repo := repository.NewReplyCommentRepository(db.Gorm(), uint64(systemID))
 	replysvc := service.NewReplyCommentService(repo, conf)
 
 	var waitSrv sync.WaitGroup

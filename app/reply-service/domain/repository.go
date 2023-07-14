@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/jinvei/microservice/app/reply-service/domain/entity"
+	"github.com/jinvei/microservice/base/api/proto/v1/dto"
 )
 
 var (
@@ -20,4 +21,7 @@ type IReplyCommentRepository interface {
 	GetCommentLastFloor(ctx context.Context, subject, parent uint64) (uint64, error)
 	CreateComment(ctx context.Context, subject, parent, floor, userid, replyto uint64, cc entity.CommentContent) (entity.CommentItem, entity.CommentContent, error)
 	GetSubject(ctx context.Context, id uint64) (entity.CommentSubject, error)
+	BatchSubmitComments(ctx context.Context, comments []*dto.ReplyComment) ([]entity.CommentItem, []entity.CommentContent, error)
+	BatchIncrCommentCount(ctx context.Context, comments []entity.CountableItem) ([]*entity.CommentItem, []*entity.CommentContent, error)
+	BatchIncrSubjectCount(ctx context.Context, comments []entity.CountableItem) ([]entity.CommentSubject, error)
 }

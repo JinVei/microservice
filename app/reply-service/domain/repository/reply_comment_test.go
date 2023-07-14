@@ -16,7 +16,7 @@ func TestCreateComment(t *testing.T) {
 	conf.SetSystemID("10001")
 	ds := datasource.New(conf, 10001)
 
-	repo := NewReplyCommentRepository(ds.Orm())
+	repo := NewReplyCommentRepository(ds.Gorm(), 10001)
 
 	e, err := repo.GetSubject(context.Background(), 1)
 	if err != nil {
@@ -50,7 +50,7 @@ func TestListCommentPage(t *testing.T) {
 	subject := 1
 	parent := 0
 	floor := 3
-	repo := NewReplyCommentRepository(ds.Orm())
+	repo := NewReplyCommentRepository(ds.Gorm(), 10001)
 
 	ids, err := repo.ListCommentsPageIds(context.Background(), uint64(subject), uint64(parent), floor, 10)
 	if err != nil {
